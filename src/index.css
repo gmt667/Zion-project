@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0b1f3a;
+  --color-secondary: #f39c12;
+  --color-accent: #e67e22;
+  --color-neutral-bg: #f8f9fa;
+  --color-text-dark: #222222;
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Poppins", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --animate-spin-slow: spin 12s linear infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #0b1f3a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f39c12;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text-dark);
+  background-color: var(--color-neutral-bg);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+.glow-glow:hover {
+  box-shadow: 0 10px 25px -5px rgba(243, 156, 18, 0.3);
+}
+
+.geometric-pattern {
+  background-image: radial-gradient(#F39C12 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+}
+
+.hero-mask {
+  clip-path: polygon(0 0, 100% 0, 100% 90%, 0% 100%);
+}
+
+@media (max-width: 768px) {
+  .hero-mask {
+    clip-path: none;
+  }
+}
+
+.accent-line {
+  height: 4px;
+  width: 50px;
+  background-color: #F39C12;
+}
+
+.construction-grid-bg {
+  background-size: 40px 40px;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+}
+
+@keyframes map-pulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-map-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: map-pulse 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+/* Custom CSS transitions for the interactive regional map */
+#projects .lg\:col-span-5 path {
+  transition: all 0.4s ease-in-out;
+}
+
+#projects .lg\:col-span-5 path.map-active-region {
+  stroke-dasharray: 6 4;
+}
+
+
