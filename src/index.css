@@ -98,8 +98,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Custom CSS transitions for the interactive regional map */
-#projects .lg\:col-span-5 path {
-  transition: all 0.4s ease-in-out;
+#projects .lg\:col-span-5 path,
+#malawi-map-container path {
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1), filter 0.3s ease-in-out;
 }
 
 #projects .lg\:col-span-5 path.map-active-region {
@@ -114,6 +115,7 @@ h1, h2, h3, h4, h5, h6 {
   stroke: var(--color-secondary, #f39c12) !important;
   stroke-width: 2.5px !important;
   stroke-opacity: 1 !important;
+  filter: brightness(1.25) !important;
 }
 
 

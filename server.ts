@@ -468,7 +468,7 @@ function getInitialData() {
     metaDescription: "Zion Projects Construction Ltd is Malawi's premier Grade-A general contractor. Specializing in high-performance highway networks, reinforced concrete bridges, sewage/water systems, and commercial building developments.",
     metaKeywords: "Zion Projects, Construction Malawi, Civil Engineering Lilongwe, Road Construction Blantyre, Bridges, Sewer Systems, NCIC Grade A",
     cookieConsentActive: true,
-    whatsappNumber: "+265999432109",
+    whatsappNumber: "+265997914840",
     whatsappMessage: "Hello Zion Projects, I would like to inquire about your engineering services."
   };
 
