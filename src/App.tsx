@@ -187,6 +187,18 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (currentView === 'downloads') {
+      setCurrentView('about');
+      setTimeout(() => {
+        const el = document.getElementById('compliance-section');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    }
+  }, [currentView]);
+
   const fetchInitialData = async () => {
     setLoading(true);
     try {
@@ -383,6 +395,52 @@ export default function App() {
     ? gallery
     : gallery.filter(g => g.albumId === galleryFilter);
 
+  const filteredCerts = certificates.filter(cert => {
+    const matchesCategory = certCategory === 'all' || cert.category === certCategory;
+    const matchesSearch = certSearch === '' || 
+      cert.title.toLowerCase().includes(certSearch.toLowerCase()) ||
+      cert.number.toLowerCase().includes(certSearch.toLowerCase()) ||
+      cert.authority.toLowerCase().includes(certSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleVerifyCheck = (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifyError('');
+    setVerifiedCert(null);
+    
+    if (!verifyInput.trim()) {
+      setVerifyError('Please enter a certificate or registration number.');
+      return;
+    }
+    
+    const found = certificates.find(
+      c => c.number.toLowerCase() === verifyInput.trim().toLowerCase() ||
+           c.title.toLowerCase().includes(verifyInput.trim().toLowerCase())
+    );
+    
+    if (found) {
+      setVerifiedCert(found);
+    } else {
+      setVerifyError('No matching legal registration found for the entered number. Try entering a code like "NCIC-CIV-G1-90412" or "C-1224/2012".');
+    }
+  };
+
+  const selectCertIcon = (cat: string) => {
+    switch (cat) {
+      case 'Legal & Incorporation':
+        return <Shield className="w-5 h-5 text-indigo-500" />;
+      case 'NCIC Construction Licenses':
+        return <HardHat className="w-5 h-5 text-amber-500" />;
+      case 'Tax & Municipal':
+        return <FileText className="w-5 h-5 text-emerald-500" />;
+      case 'Safety & Professional':
+        return <Award className="w-5 h-5 text-blue-500" />;
+      default:
+        return <FileText className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] text-[#222222] font-sans flex flex-col justify-between">
       
@@ -415,11 +473,11 @@ export default function App() {
               {/* Massive Animated Hero Slider */}
               <HeroSlider onNavigate={setCurrentView} />
 
-              {/* CEO Overview Brief */}
+              {/* Company Overview Brief */}
               <section className="py-20 px-4 md:px-8 bg-white max-w-7xl mx-auto w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                   
-                  {/* CEO message panel */}
+                  {/* Corporate info panel */}
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-3 mb-1">
                       <div className="accent-line"></div>
@@ -431,24 +489,12 @@ export default function App() {
                       Pioneering Resilient Civil Works and Building Solutions
                     </h2>
                     
-                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider text-secondary mt-1">
-                      A MESSAGE FROM OUR MANAGING DIRECTOR:
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Zion Projects Construction Ltd is a leading Grade-A civil engineering and construction contractor in Malawi. We specialize in planning, designing, and constructing high-impact physical infrastructure including public highways, durable bridge systems, large-scale commercial facilities, and municipal water logistics networks.
                     </p>
-                    <blockquote className="border-l-4 border-secondary pl-4 py-2 italic text-sm text-gray-600 leading-relaxed bg-amber-50/20">
-                      "{companyInfo?.ceoMessage}"
-                    </blockquote>
-                    
-                    <div className="mt-2 flex items-center gap-3">
-                      <img 
-                        src={companyInfo?.ceoImage || "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400"} 
-                        alt="CEO Portrait" 
-                        className="w-12 h-12 rounded-full object-cover border-2 border-secondary/30"
-                      />
-                      <div>
-                        <p className="text-xs font-bold text-primary uppercase tracking-wide">{companyInfo?.ceoName}</p>
-                        <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Managing Director, Zion Projects</p>
-                      </div>
-                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Armed with modern fleet machinery, certified materials, and an experienced engineering design team, we operate in strict compliance with the National Construction Industry Council (NCIC) and the Malawi Bureau of Standards (MBS) to build structures that stand the test of time.
+                    </p>
                   </div>
 
                   {/* Visual block representing core values */}
@@ -653,13 +699,13 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start bg-white p-8 md:p-10 rounded-2xl border border-gray-100">
                 <div className="relative h-96 lg:h-full rounded-xl overflow-hidden shadow shrink-0">
                   <img 
-                    src={companyInfo?.ceoImage || "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400"} 
-                    alt="CEO" 
+                    src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=800" 
+                    alt="Zion Infrastructure Construction Site" 
                     className="w-full h-full object-cover min-h-[350px]"
                   />
                   <div className="absolute bottom-4 left-4 right-4 bg-primary/95 text-white p-4 rounded backdrop-blur border border-white/10 shadow-lg">
-                    <p className="text-xs font-bold text-secondary">{companyInfo?.ceoName}</p>
-                    <p className="text-[9px] uppercase font-bold text-gray-300">Managing Director & CEO, Zion Projects Ltd</p>
+                    <p className="text-xs font-bold text-secondary">Zion Projects Ltd</p>
+                    <p className="text-[9px] uppercase font-bold text-gray-300">Grade-A Civil & Structural Engineering</p>
                   </div>
                 </div>
 
@@ -672,9 +718,9 @@ export default function App() {
                     </p>
                   </div>
                   
-                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 italic text-xs text-primary/90 font-medium">
-                    <span className="block text-[10px] uppercase font-black text-secondary tracking-widest not-italic mb-1">Executive Message</span>
-                    "{companyInfo?.ceoMessage}"
+                  <div className="bg-[#FAF7F2] p-6 rounded-xl border border-[#E9E1CE] text-xs text-primary/90 font-medium">
+                    <span className="block text-[10px] uppercase font-black text-secondary tracking-widest mb-1">Our Professional Commitment</span>
+                    "To build structures that endure generations, serving as the physical backbone of Malawi's urban and rural development with absolute compliance and zero compromise on safety."
                   </div>
                 </div>
               </div>
@@ -803,15 +849,15 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
                     { title: "Quality Workmanship", desc: "We maintain high construction standards and attention to detail in every project.", icon: <Award className="text-secondary" size={18} /> },
-                    { title: "Experienced Team", desc: "Our skilled professionals bring technical expertise and practical experience to every assignment.", icon: <Users className="text-secondary" size={18} /> },
+                    { title: "Technical Expertise", desc: "Our systems integrate advanced civil engineering capabilities and practical experience to deliver elite results.", icon: <HardHat className="text-secondary" size={18} /> },
                     { title: "Timely Project Delivery", desc: "We understand the importance of deadlines and strive to complete projects on schedule.", icon: <Clock className="text-secondary" size={18} /> },
                     { title: "Cost-Effective Solutions", desc: "We provide efficient and practical solutions that maximize value without compromising quality.", icon: <DollarSign className="text-secondary" size={18} /> },
-                    { title: "Safety First", desc: "We prioritize the health and safety of our employees, clients, and the communities we serve.", icon: <ShieldAlert className="text-secondary" size={18} /> },
-                    { title: "Client-Centered Approach", desc: "We work closely with clients to understand their needs and deliver tailored solutions.", icon: <Users className="text-secondary" size={18} /> },
+                    { title: "Safety First", desc: "We prioritize safety, environmental health, and standard operating procedures across all sites.", icon: <ShieldAlert className="text-secondary" size={18} /> },
+                    { title: "Client-Centered Solutions", desc: "We work closely with clients to understand their needs and deliver tailored infrastructure solutions.", icon: <Layers className="text-secondary" size={18} /> },
                     { title: "Integrity and Transparency", desc: "We conduct our business with honesty, professionalism, and accountability.", icon: <Eye className="text-secondary" size={18} /> },
                     { title: "Reliable Service", desc: "We are committed to building long-term relationships through dependable and consistent performance.", icon: <ThumbsUp className="text-secondary" size={18} /> },
                     { title: "Innovation and Efficiency", desc: "We embrace modern construction methods and technologies to improve project outcomes.", icon: <Zap className="text-secondary" size={18} /> },
-                    { title: "Comprehensive Construction Solutions", desc: "From planning and design support to construction and maintenance, we provide end-to-end services.", icon: <Layers className="text-secondary" size={18} /> }
+                    { title: "Comprehensive Solutions", desc: "From planning and design support to construction and maintenance, we provide end-to-end services.", icon: <Layers className="text-secondary" size={18} /> }
                   ].map((item, idx) => (
                     <div key={idx} className="bg-white p-5 rounded-xl border border-gray-100 flex items-start gap-4 shadow-sm">
                       <div className="p-2.5 bg-gray-50 rounded-lg shrink-0">
@@ -890,19 +936,330 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Team Members List */}
-              <div className="bg-gray-50 p-8 md:p-12 rounded-2xl border border-gray-100">
-                <h3 className="text-xl font-black text-primary text-center mb-10 tracking-tight">Meet Our Lead Engineers & Executives</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                  {team.map(member => (
-                    <div key={member.id} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all text-center">
-                      <img src={member.image} alt={member.name} className="w-24 h-24 rounded-full object-cover mx-auto border-2 border-secondary shadow-sm" />
-                      <h4 className="text-sm font-bold text-primary mt-4">{member.name}</h4>
-                      <p className="text-[10px] text-secondary font-black uppercase mt-1 tracking-wider">{member.role}</p>
-                      <p className="text-[11px] text-gray-400 mt-2 leading-relaxed">{member.bio}</p>
+              {/* Compliance & Audit Section (Integrated inside About Us) */}
+              <div id="compliance-section" className="border-t border-gray-200 pt-16 space-y-12">
+                
+                {/* Header Banner */}
+                <div className="bg-primary text-white p-8 md:p-12 rounded-none border-l-4 border-l-secondary relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-8 shadow-md">
+                  <div className="absolute inset-0 bg-radial-gradient from-secondary/10 to-transparent pointer-events-none" />
+                  <div className="space-y-3 max-w-3xl relative z-10">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary bg-secondary/10 px-3 py-1.5 border border-secondary/30">
+                      LEGAL STATUS & AUDIT
+                    </span>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tight uppercase">
+                      Company Registrations & Certifications
+                    </h1>
+                    <p className="text-xs md:text-sm text-gray-300 font-light max-w-2xl leading-relaxed">
+                      Zion Projects Construction Ltd operates in strict compliance with the laws of the Republic of Malawi. Here you can inspect our legal standing, download certified documents, and instantly verify our active Grade-A contractor licenses.
+                    </p>
+                  </div>
+                  <div className="bg-white/5 border border-white/10 p-4 shrink-0 grid grid-cols-2 gap-6 min-w-[240px] text-center backdrop-blur-sm relative z-10">
+                    <div>
+                      <span className="block text-2xl font-black text-secondary">Grade-A</span>
+                      <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">NCIC Status</span>
                     </div>
-                  ))}
+                    <div className="border-l border-white/10 pl-6">
+                      <span className="block text-2xl font-black text-emerald-400">100%</span>
+                      <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">Tax Compliance</span>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Main Content Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  
+                  {/* Left Column: Category Selector & Verification Panel */}
+                  <div className="lg:col-span-4 space-y-8">
+                    
+                    {/* Interactive Real-time Verification Tool */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm flex flex-col gap-5">
+                      <div className="border-b border-gray-100 pb-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Shield className="w-5 h-5 text-secondary" />
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
+                            Contractor Verification
+                          </h3>
+                        </div>
+                        <p className="text-[10px] text-gray-500 font-light">
+                          Verify the authenticity of Zion Projects' credentials against our local database directory.
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleVerifyCheck} className="space-y-3">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Enter Number (e.g. C-1224/2012)"
+                            value={verifyInput}
+                            onChange={(e) => setVerifyInput(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-300 rounded-none py-2.5 pl-3 pr-10 text-xs focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary text-primary font-mono placeholder:font-sans"
+                          />
+                          <button
+                            type="submit"
+                            className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-primary text-secondary hover:bg-secondary hover:text-primary transition-all rounded-none cursor-pointer flex items-center justify-center border border-secondary/20"
+                          >
+                            <Search size={13} />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] text-gray-400 font-medium">Quick examples:</span>
+                          <button 
+                            type="button" 
+                            onClick={() => { setVerifyInput('C-1224/2012'); setVerifyError(''); setVerifiedCert(null); }}
+                            className="text-[9px] text-secondary font-bold hover:underline"
+                          >
+                            C-1224/2012
+                          </button>
+                          <span className="text-gray-300">|</span>
+                          <button 
+                            type="button" 
+                            onClick={() => { setVerifyInput('NCIC-CIV-G1-90412'); setVerifyError(''); setVerifiedCert(null); }}
+                            className="text-[9px] text-secondary font-bold hover:underline"
+                          >
+                            NCIC-CIV-G1-90412
+                          </button>
+                        </div>
+                      </form>
+
+                      {/* Verification Results Panel */}
+                      {verifiedCert && (
+                        <div className="bg-emerald-50/60 border border-emerald-200 p-4 rounded-none animate-fade-in space-y-3">
+                          <div className="flex items-start gap-2.5">
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">
+                                CREDENTIAL VERIFIED
+                              </span>
+                              <h4 className="text-xs font-bold text-gray-800">{verifiedCert.title}</h4>
+                              <p className="text-[10px] text-gray-500 leading-normal font-light">
+                                Issued by {verifiedCert.authority} under license register <strong className="font-mono text-emerald-700">{verifiedCert.number}</strong>.
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-white p-2.5 border border-emerald-100 rounded-none grid grid-cols-2 gap-2 text-[9px] font-bold text-gray-600 font-mono">
+                            <div>
+                              <span className="text-gray-400 block text-[8px] font-sans">STATUS</span>
+                              <span className="text-emerald-600">{verifiedCert.status}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 block text-[8px] font-sans">EXPIRY DATE</span>
+                              <span>{verifiedCert.expiryDate}</span>
+                            </div>
+                          </div>
+                          <p className="text-[9px] text-emerald-700/80 leading-relaxed font-light">
+                            ✓ Security Handshake: Cleared by internal database verification as fully active and legally compliant.
+                          </p>
+                        </div>
+                      )}
+
+                      {verifyError && (
+                        <div className="bg-red-50 border border-red-200 p-4 rounded-none text-xs text-red-700 flex items-start gap-2 animate-fade-in">
+                          <span className="font-bold text-red-500 shrink-0">!</span>
+                          <p className="leading-relaxed font-light text-[11px]">{verifyError}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Category Filter Menu */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm space-y-4">
+                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-primary border-b border-gray-100 pb-2">
+                        Filter By Category
+                      </h3>
+                      <div className="flex flex-col gap-1.5">
+                        {[
+                          { id: 'all', label: 'All Registrations' },
+                          { id: 'Legal & Incorporation', label: 'Legal & Incorporation' },
+                          { id: 'NCIC Construction Licenses', label: 'NCIC Construction Licenses' },
+                          { id: 'Tax & Municipal', label: 'Tax & Municipal' },
+                          { id: 'Safety & Professional', label: 'Safety & Professional' }
+                        ].map(cat => (
+                          <button
+                            key={cat.id}
+                            onClick={() => setCertCategory(cat.id)}
+                            className={`w-full text-left px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-all rounded-none flex justify-between items-center ${
+                              certCategory === cat.id
+                                ? 'bg-primary text-secondary border-l-4 border-l-secondary font-bold'
+                                : 'text-gray-600 hover:bg-gray-50'
+                            }`}
+                          >
+                            <span>{cat.label}</span>
+                            <span className={`text-[10px] px-1.5 py-0.5 font-bold ${
+                              certCategory === cat.id ? 'bg-secondary text-primary' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {cat.id === 'all' 
+                                ? certificates.length 
+                                : certificates.filter(c => c.category === cat.id).length
+                              }
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Credibility Guarantee block */}
+                    <div className="bg-[#FAF7F2] border border-[#E9E1CE] p-6 rounded-none space-y-3">
+                      <h4 className="text-xs font-bold text-[#8C6D3B] uppercase tracking-wide flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-secondary" />
+                        Compliance & Audit Policy
+                      </h4>
+                      <p className="text-[11px] text-[#6E5A35] leading-relaxed font-light">
+                        Many institutional clients, including Government departments, municipal assemblies, and international organizations require proof of legal incorporation, tax status, and NCIC registrations. Zion Projects provides this portal to afford absolute transparency and security in the commercial bidding phase.
+                      </p>
+                      <p className="text-[10px] text-gray-400 italic">
+                        Last audited by independent structural and tax bodies: July 2026.
+                      </p>
+                    </div>
+
+                  </div>
+
+                  {/* Right Column: Search & Certificates Grid */}
+                  <div className="lg:col-span-8 space-y-6">
+                    
+                    {/* Search and results info bar */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 border border-gray-200">
+                      <div className="relative w-full sm:max-w-xs">
+                        <input
+                          type="text"
+                          placeholder="Search certificates..."
+                          value={certSearch}
+                          onChange={(e) => setCertSearch(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-none py-2 px-3 pl-8 text-xs text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
+                        />
+                        <Search size={12} className="absolute left-2.5 top-3 text-gray-400" />
+                      </div>
+                      
+                      <div className="text-[11px] font-bold text-gray-500">
+                        Showing {filteredCerts.length} of {certificates.length} Credentials
+                      </div>
+                    </div>
+
+                    {/* Certs Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {filteredCerts.length === 0 ? (
+                        <div className="col-span-full bg-white border border-gray-100 py-16 text-center shadow-sm">
+                          <span className="text-sm font-bold text-gray-400 block mb-2">No Matching Certifications Found</span>
+                          <button 
+                            onClick={() => { setCertSearch(''); setCertCategory('all'); }}
+                            className="text-xs text-secondary font-bold hover:underline"
+                          >
+                            Reset all filters
+                          </button>
+                        </div>
+                      ) : (
+                        filteredCerts.map(cert => {
+                          const isDownloading = downloadingCertId === cert.id;
+                          return (
+                            <div 
+                              key={cert.id} 
+                              className="bg-white p-6 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-6 relative group"
+                            >
+                              <div className="space-y-4">
+                                {/* Header of card */}
+                                <div className="flex justify-between items-start">
+                                  <div className="p-2 bg-gray-50 border border-gray-100 rounded-none">
+                                    {selectCertIcon(cert.category)}
+                                  </div>
+                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                                    cert.status === 'Grade-A Registered'
+                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                      : cert.status === 'Compliant'
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : cert.status === 'Verified'
+                                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                                  }`}>
+                                    {cert.status}
+                                  </span>
+                                </div>
+
+                                <div className="space-y-1">
+                                  <span className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold block">
+                                    {cert.category}
+                                  </span>
+                                  <h3 className="text-sm font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">
+                                    {cert.title}
+                                  </h3>
+                                  <p className="text-[11px] text-gray-500 font-light leading-relaxed line-clamp-2">
+                                    {cert.description}
+                                  </p>
+                                </div>
+
+                                {/* Numbers & Expiry Section */}
+                                <div className="bg-gray-50 p-3 space-y-1.5 border border-gray-100">
+                                  <div className="flex justify-between text-[10px]">
+                                    <span className="text-gray-400 font-medium">Doc Number:</span>
+                                    <span className="font-mono text-primary font-bold">{cert.number}</span>
+                                  </div>
+                                  <div className="flex justify-between text-[10px]">
+                                    <span className="text-gray-400 font-medium">Expiry:</span>
+                                    <span className={`font-semibold ${cert.expiryDate.includes('Permanent') ? 'text-emerald-600' : 'text-gray-600'}`}>
+                                      {cert.expiryDate}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Footer Action buttons */}
+                              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                                <button
+                                  onClick={() => setInspectedCert(cert)}
+                                  className="py-2 bg-gray-100 hover:bg-gray-200 text-primary text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer text-center"
+                                >
+                                  View Certificate
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    setDownloadingCertId(cert.id);
+                                    setTimeout(() => {
+                                      setDownloadingCertId(null);
+                                      setInspectedCert(cert);
+                                      alert(`PDF Export Initiated: Formulating official print spec sheet for registration: "${cert.title}" (License: ${cert.number}). Select Print Destination to save as PDF.`);
+                                    }, 1000);
+                                  }}
+                                  disabled={isDownloading}
+                                  className="py-2 bg-primary hover:bg-secondary text-secondary hover:text-primary disabled:bg-primary/50 text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center flex items-center justify-center gap-1 border border-secondary/20"
+                                >
+                                  {isDownloading ? (
+                                    <>
+                                      <Loader2 className="animate-spin w-3 h-3 text-secondary" />
+                                      <span>Preparing...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Download size={11} />
+                                      <span>Download PDF</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* FAQ section reference */}
+                <div className="bg-white p-8 border border-gray-200 text-center space-y-4">
+                  <h3 className="text-lg font-black text-primary uppercase">
+                    Need additional legal documentations or tender files?
+                  </h3>
+                  <p className="text-xs text-gray-500 font-light max-w-2xl mx-auto leading-relaxed">
+                    If your procurement regulations demand additional tax declarations, board resolutions, bank statements, or joint venture articles of association, please reach out directly to our corporate secretaries at Area 4 headquarters.
+                  </p>
+                  <button
+                    onClick={() => { setCurrentView('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className="inline-flex bg-secondary hover:bg-primary text-primary hover:text-white px-8 py-3 font-bold text-xs uppercase tracking-widest border border-secondary transition-all cursor-pointer"
+                  >
+                    Contact Procurement Division
+                  </button>
+                </div>
+
               </div>
 
             </div>
@@ -1272,9 +1629,10 @@ export default function App() {
                     <svg viewBox="0 0 280 480" className="w-full h-full">
                       <defs>
                         {/* Selected Active Gold Glow */}
-                        <filter id="active-glow" x="-20%" y="-20%" width="140%" height="140%">
-                          <feGaussianBlur stdDeviation="5" result="blur" />
-                          <feFlood floodColor="#f39c12" floodOpacity={0.45} result="color" />
+                        <filter id="active-glow" x="-30%" y="-30%" width="160%" height="160%">
+                          <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#f39c12" floodOpacity="0.45" />
+                          <feGaussianBlur stdDeviation="4" result="blur" />
+                          <feFlood floodColor="#f39c12" floodOpacity={0.3} result="color" />
                           <feComposite in="color" in2="blur" operator="in" result="glow" />
                           <feMerge>
                             <feMergeNode in="glow" />
@@ -1282,10 +1640,11 @@ export default function App() {
                           </feMerge>
                         </filter>
                         
-                        {/* Hover Soft Gold Glow */}
-                        <filter id="hover-glow" x="-20%" y="-20%" width="140%" height="140%">
+                        {/* Hover Soft Gold Glow with subtle drop shadow */}
+                        <filter id="hover-glow" x="-30%" y="-30%" width="160%" height="160%">
+                          <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000000" floodOpacity="0.25" />
                           <feGaussianBlur stdDeviation="3" result="blur" />
-                          <feFlood floodColor="#f39c12" floodOpacity={0.25} result="color" />
+                          <feFlood floodColor="#f39c12" floodOpacity={0.2} result="color" />
                           <feComposite in="color" in2="blur" operator="in" result="glow" />
                           <feMerge>
                             <feMergeNode in="glow" />
