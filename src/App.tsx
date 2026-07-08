@@ -132,6 +132,7 @@ export default function App() {
   const [projectDistrictFilter, setProjectDistrictFilter] = useState<string>('all');
   const [projectStatusFilter, setProjectStatusFilter] = useState<string>('all');
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [hoveredRegionName, setHoveredRegionName] = useState<string | null>(null);
   const [clickedRegion, setClickedRegion] = useState<string | null>(null);
   const [showMapLegend, setShowMapLegend] = useState<boolean>(true);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -215,6 +216,20 @@ export default function App() {
       }, 150);
     }
   }, [currentView]);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const mapContainer = document.getElementById('malawi-map-container');
+      if (mapContainer && !mapContainer.contains(e.target as Node)) {
+        setHoveredRegion(null);
+        setHoveredRegionName(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => {
+      document.removeEventListener('click', handleOutsideClick);
+    };
+  }, []);
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -1688,6 +1703,7 @@ export default function App() {
                         role="button"
                         aria-label="Northern Malawi Region"
                         aria-description={`${projects.filter(p => p.region === 'Northern Malawi').length} projects`}
+                        data-active={projectRegionFilter.includes('Northern Malawi') ? "true" : "false"}
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
                           projectRegionFilter.includes('Northern Malawi')
@@ -1722,18 +1738,31 @@ export default function App() {
                             }, 50);
                           }
                         }}
-                        onMouseEnter={() => setHoveredRegion('Northern Malawi')}
-                        onMouseLeave={() => setHoveredRegion(null)}
-                        onFocus={() => setHoveredRegion('Northern Malawi')}
-                        onBlur={() => setHoveredRegion(null)}
+                        onMouseEnter={() => {
+                          setHoveredRegion('Northern Malawi');
+                          setHoveredRegionName('Northern Malawi');
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredRegion(null);
+                          setHoveredRegionName(null);
+                        }}
+                        onFocus={() => {
+                          setHoveredRegion('Northern Malawi');
+                          setHoveredRegionName('Northern Malawi');
+                        }}
+                        onBlur={() => {
+                          setHoveredRegion(null);
+                          setHoveredRegionName(null);
+                        }}
                         onMouseMove={(e) => {
                           const rect = document.getElementById('malawi-map-container')?.getBoundingClientRect();
                           if (rect) {
                             setTooltipPosition({
                               x: e.clientX - rect.left,
-                              y: e.clientY - rect.top - 12,
+                              y: e.clientY - rect.top,
                             });
                           }
+                          setHoveredRegionName('Northern Malawi');
                         }}
                       />
                       <text x="95" y="75" className="fill-gray-400 text-[10px] font-bold pointer-events-none uppercase tracking-widest">
@@ -1746,6 +1775,7 @@ export default function App() {
                         role="button"
                         aria-label="Central Malawi Region"
                         aria-description={`${projects.filter(p => p.region === 'Central Malawi').length} projects`}
+                        data-active={projectRegionFilter.includes('Central Malawi') ? "true" : "false"}
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
                           projectRegionFilter.includes('Central Malawi')
@@ -1780,18 +1810,31 @@ export default function App() {
                             }, 50);
                           }
                         }}
-                        onMouseEnter={() => setHoveredRegion('Central Malawi')}
-                        onMouseLeave={() => setHoveredRegion(null)}
-                        onFocus={() => setHoveredRegion('Central Malawi')}
-                        onBlur={() => setHoveredRegion(null)}
+                        onMouseEnter={() => {
+                          setHoveredRegion('Central Malawi');
+                          setHoveredRegionName('Central Malawi');
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredRegion(null);
+                          setHoveredRegionName(null);
+                        }}
+                        onFocus={() => {
+                          setHoveredRegion('Central Malawi');
+                          setHoveredRegionName('Central Malawi');
+                        }}
+                        onBlur={() => {
+                          setHoveredRegion(null);
+                          setHoveredRegionName(null);
+                        }}
                         onMouseMove={(e) => {
                           const rect = document.getElementById('malawi-map-container')?.getBoundingClientRect();
                           if (rect) {
                             setTooltipPosition({
                               x: e.clientX - rect.left,
-                              y: e.clientY - rect.top - 12,
+                              y: e.clientY - rect.top,
                             });
                           }
+                          setHoveredRegionName('Central Malawi');
                         }}
                       />
                       <text x="115" y="210" className="fill-gray-400 text-[10px] font-bold pointer-events-none uppercase tracking-widest">
@@ -1804,6 +1847,7 @@ export default function App() {
                         role="button"
                         aria-label="Southern Malawi Region"
                         aria-description={`${projects.filter(p => p.region === 'Southern Malawi').length} projects`}
+                        data-active={projectRegionFilter.includes('Southern Malawi') ? "true" : "false"}
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
                           projectRegionFilter.includes('Southern Malawi')
@@ -1838,23 +1882,157 @@ export default function App() {
                             }, 50);
                           }
                         }}
-                        onMouseEnter={() => setHoveredRegion('Southern Malawi')}
-                        onMouseLeave={() => setHoveredRegion(null)}
-                        onFocus={() => setHoveredRegion('Southern Malawi')}
-                        onBlur={() => setHoveredRegion(null)}
+                        onMouseEnter={() => {
+                          setHoveredRegion('Southern Malawi');
+                          setHoveredRegionName('Southern Malawi');
+                        }}
+                        onMouseLeave={() => {
+                          setHoveredRegion(null);
+                          setHoveredRegionName(null);
+                        }}
+                        onFocus={() => {
+                          setHoveredRegion('Southern Malawi');
+                          setHoveredRegionName('Southern Malawi');
+                        }}
+                        onBlur={() => {
+                          setHoveredRegion(null);
+                          setHoveredRegionName(null);
+                        }}
                         onMouseMove={(e) => {
                           const rect = document.getElementById('malawi-map-container')?.getBoundingClientRect();
                           if (rect) {
                             setTooltipPosition({
                               x: e.clientX - rect.left,
-                              y: e.clientY - rect.top - 12,
+                              y: e.clientY - rect.top,
                             });
                           }
+                          setHoveredRegionName('Southern Malawi');
                         }}
                       />
                       <text x="165" y="340" className="fill-gray-400 text-[10px] font-bold pointer-events-none uppercase tracking-widest">
                         South
                       </text>
+
+                      {/* Floating Region Count Badges */}
+                      {/* Northern Malawi Badge */}
+                      <g className="animate-float" style={{ animationDelay: '0s' }}>
+                        <g 
+                          className="transition-transform duration-[400ms] ease-in-out"
+                          style={{ 
+                            transformOrigin: '100px 105px',
+                            transform: projectRegionFilter.includes('Northern Malawi') ? 'scale(1.25)' : 'scale(1)'
+                          }}
+                        >
+                          <circle
+                            cx="100"
+                            cy="105"
+                            r="11"
+                            className={`transition-colors duration-300 stroke-white stroke-[1.5px] cursor-pointer shadow-md ${
+                              projectRegionFilter.includes('Northern Malawi') 
+                                ? 'fill-secondary' 
+                                : 'fill-primary hover:fill-secondary'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setClickedRegion('Northern Malawi');
+                              setTimeout(() => setClickedRegion(null), 350);
+                              toggleRegionFilter('Northern Malawi');
+                              setTimeout(() => {
+                                document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 50);
+                            }}
+                            title={`Northern Malawi: ${projects.filter(p => p.region === 'Northern Malawi').length} projects`}
+                          />
+                          <text
+                            x="100"
+                            y="108"
+                            className="fill-white text-[9px] font-extrabold text-center font-mono pointer-events-none"
+                            textAnchor="middle"
+                          >
+                            {projects.filter(p => p.region === 'Northern Malawi').length}
+                          </text>
+                        </g>
+                      </g>
+
+                      {/* Central Malawi Badge */}
+                      <g className="animate-float" style={{ animationDelay: '0.5s' }}>
+                        <g 
+                          className="transition-transform duration-[400ms] ease-in-out"
+                          style={{ 
+                            transformOrigin: '130px 240px',
+                            transform: projectRegionFilter.includes('Central Malawi') ? 'scale(1.25)' : 'scale(1)'
+                          }}
+                        >
+                          <circle
+                            cx="130"
+                            cy="240"
+                            r="11"
+                            className={`transition-colors duration-300 stroke-white stroke-[1.5px] cursor-pointer shadow-md ${
+                              projectRegionFilter.includes('Central Malawi') 
+                                ? 'fill-secondary' 
+                                : 'fill-primary hover:fill-secondary'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setClickedRegion('Central Malawi');
+                              setTimeout(() => setClickedRegion(null), 350);
+                              toggleRegionFilter('Central Malawi');
+                              setTimeout(() => {
+                                document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 50);
+                            }}
+                            title={`Central Malawi: ${projects.filter(p => p.region === 'Central Malawi').length} projects`}
+                          />
+                          <text
+                            x="130"
+                            y="243"
+                            className="fill-white text-[9px] font-extrabold text-center font-mono pointer-events-none"
+                            textAnchor="middle"
+                          >
+                            {projects.filter(p => p.region === 'Central Malawi').length}
+                          </text>
+                        </g>
+                      </g>
+
+                      {/* Southern Malawi Badge */}
+                      <g className="animate-float" style={{ animationDelay: '1s' }}>
+                        <g 
+                          className="transition-transform duration-[400ms] ease-in-out"
+                          style={{ 
+                            transformOrigin: '175px 370px',
+                            transform: projectRegionFilter.includes('Southern Malawi') ? 'scale(1.25)' : 'scale(1)'
+                          }}
+                        >
+                          <circle
+                            cx="175"
+                            cy="370"
+                            r="11"
+                            className={`transition-colors duration-300 stroke-white stroke-[1.5px] cursor-pointer shadow-md ${
+                              projectRegionFilter.includes('Southern Malawi') 
+                                ? 'fill-secondary' 
+                                : 'fill-primary hover:fill-secondary'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setClickedRegion('Southern Malawi');
+                              setTimeout(() => setClickedRegion(null), 350);
+                              toggleRegionFilter('Southern Malawi');
+                              setTimeout(() => {
+                                document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 50);
+                            }}
+                            title={`Southern Malawi: ${projects.filter(p => p.region === 'Southern Malawi').length} projects`}
+                          />
+                          <text
+                            x="175"
+                            y="373"
+                            className="fill-white text-[9px] font-extrabold text-center font-mono pointer-events-none"
+                            textAnchor="middle"
+                          >
+                            {projects.filter(p => p.region === 'Southern Malawi').length}
+                          </text>
+                        </g>
+                      </g>
 
                       {/* Overlay project location pins on the map */}
                       {projects.map((proj) => {
@@ -1915,26 +2093,26 @@ export default function App() {
                     </div>
 
                     {/* Hover Tooltip for Map Regions */}
-                    {hoveredRegion && (
+                    {hoveredRegionName && (
                       <div 
-                        className="absolute z-30 pointer-events-none bg-slate-950/95 text-white p-3 rounded shadow-xl border border-slate-800 backdrop-blur-sm transition-all duration-75 text-xs flex flex-col gap-1 min-w-[160px]"
+                        id="floating-region-popover"
+                        className="absolute z-30 pointer-events-none bg-slate-950/95 text-white p-3 rounded-lg shadow-2xl border border-slate-800/80 backdrop-blur-md transition-all duration-75 text-xs flex flex-col gap-1 min-w-[170px]"
                         style={{ 
-                          left: `${tooltipPosition.x}px`, 
-                          top: `${tooltipPosition.y}px`,
-                          transform: 'translate(-50%, -100%)', // center horizontally and place above mouse
+                          left: `${tooltipPosition.x + 12}px`, 
+                          top: `${tooltipPosition.y + 12}px`,
                         }}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <span className="font-extrabold text-[10px] tracking-wider uppercase text-secondary">
-                            {hoveredRegion === 'Northern Malawi' ? 'Northern' : hoveredRegion === 'Central Malawi' ? 'Central' : 'Southern'} Region
+                            {hoveredRegionName === 'Northern Malawi' ? 'Northern' : hoveredRegionName === 'Central Malawi' ? 'Central' : 'Southern'} Region
                           </span>
                           <span className="bg-primary/50 text-[10px] font-black px-1.5 py-0.5 rounded text-white border border-primary-light/20">
-                            {filteredProjects.filter(p => p.region === hoveredRegion).length} {filteredProjects.filter(p => p.region === hoveredRegion).length === 1 ? 'Proj' : 'Projs'}
+                            {filteredProjects.filter(p => p.region === hoveredRegionName).length} {filteredProjects.filter(p => p.region === hoveredRegionName).length === 1 ? 'Proj' : 'Projs'}
                           </span>
                         </div>
                         <div className="text-[9px] text-gray-400 mt-1 border-t border-slate-800 pt-1.5 leading-normal">
                           {(() => {
-                            const regionProjects = filteredProjects.filter(p => p.region === hoveredRegion);
+                            const regionProjects = filteredProjects.filter(p => p.region === hoveredRegionName);
                             if (regionProjects.length === 0) {
                               return "No matching projects in this region";
                             }
