@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calculator, User, Briefcase, FileText, CheckCircle2, 
-  Sparkles, Loader2, Upload, AlertCircle, ArrowRight, ArrowLeft, Send
+  Sparkles, Loader2, Upload, AlertCircle, ArrowRight, ArrowLeft, Send, Mail
 } from 'lucide-react';
 import { Service } from '../types';
 
@@ -263,6 +263,16 @@ Description: ${formData.description}
             <p className="text-xs text-gray-500 max-w-sm mt-2 leading-relaxed">
               Your quotation proposal has been logged and assigned to a Lead Engineering Estimator at Zion Projects.
             </p>
+
+            <a
+              href={`mailto:Zionprojectsltd265@gmail.com?subject=${encodeURIComponent(`Quote Request: ${services.find(s => s.id === formData.serviceId)?.title || 'General Engineering'} - ${formData.name}`)}&body=${encodeURIComponent(
+                `Hello Zion Projects,\n\nI have submitted a quotation request on your website. Here are my project details:\n\nName: ${formData.name}\nCompany: ${formData.company || 'N/A'}\nPhone: ${formData.phone}\nEmail: ${formData.email}\nService: ${services.find(s => s.id === formData.serviceId)?.title || 'General Engineering'}\nBudget: ${formData.budget}\nLocation: ${formData.location}\n\nProject Scope:\n${formData.description}\n\nBest regards,\n${formData.name}`
+              )}`}
+              className="mt-4 flex items-center gap-2 bg-secondary text-primary hover:bg-secondary/90 hover:scale-[1.02] active:scale-[0.98] font-black text-xs uppercase tracking-wider py-2.5 px-5 rounded shadow-md transition-all cursor-pointer"
+            >
+              <Mail size={13} />
+              <span>Send directly via Email App</span>
+            </a>
 
             {/* GEMINI SMART INSIGHTS PREVIEW TRUNKS */}
             <div className="w-full max-w-lg mt-8 border border-secondary/20 bg-amber-50/25 rounded-xl p-5 text-left relative overflow-hidden">

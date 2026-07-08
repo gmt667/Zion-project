@@ -49,17 +49,22 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
       {/* Top Contact Strip */}
       <div className="w-full bg-primary text-gray-300 text-xs py-2 px-4 md:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 border-b border-white/10">
         <div className="flex flex-wrap justify-center sm:justify-start items-center gap-4">
-          <a href={`tel:${companyInfo?.phone}`} className="flex items-center gap-1.5 hover:text-secondary transition-colors">
+          <a href={`tel:${companyInfo?.phone || '+265997914840'}`} className="flex items-center gap-1.5 hover:text-secondary transition-colors">
             <Phone size={13} className="text-secondary" />
-            <span>{companyInfo?.phone || '+265 1 772 443'}</span>
+            <span>
+              {companyInfo?.phone 
+                ? (companyInfo.phoneAlternative ? `${companyInfo.phone} / ${companyInfo.phoneAlternative}` : companyInfo.phone)
+                : '+265 997 914 840 / +265 992 847 803'
+              }
+            </span>
           </a>
-          <a href={`mailto:${companyInfo?.email}`} className="flex items-center gap-1.5 hover:text-secondary transition-colors">
+          <a href={`mailto:${companyInfo?.email || 'Zionprojectsltd265@gmail.com'}`} className="flex items-center gap-1.5 hover:text-secondary transition-colors">
             <Mail size={13} className="text-secondary" />
-            <span>{companyInfo?.email || 'info@zionprojects.mw'}</span>
+            <span>{companyInfo?.email || 'Zionprojectsltd265@gmail.com'}</span>
           </a>
           <span className="hidden lg:flex items-center gap-1.5 text-gray-400">
             <MapPin size={13} />
-            <span>{companyInfo?.address || 'Area 4, Lilongwe, Malawi'}</span>
+            <span>{companyInfo?.address || 'Zion House, Plot 47/3, Area 14, Lilongwe, Malawi'}</span>
           </span>
         </div>
         

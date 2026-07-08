@@ -5,7 +5,7 @@ import {
   Calendar, Award, User, Download, FileText, CheckCircle2, Sparkles, 
   Lock, ArrowLeft, ArrowRightLeft, BookOpen, MessageCircle, HelpCircle, 
   Search, Shield, Users, Info, ChevronRight, Eye, EyeOff, Send, Moon, Sun, Loader2,
-  CreditCard, DollarSign, ThumbsUp, Zap, X, RefreshCw
+  CreditCard, DollarSign, ThumbsUp, Zap, X, RefreshCw, ZoomIn, ZoomOut
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -135,6 +135,7 @@ export default function App() {
   const [hoveredRegionName, setHoveredRegionName] = useState<string | null>(null);
   const [clickedRegion, setClickedRegion] = useState<string | null>(null);
   const [showMapLegend, setShowMapLegend] = useState<boolean>(true);
+  const [mapZoom, setMapZoom] = useState<boolean>(false);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [galleryFilter, setGalleryFilter] = useState<string>('all');
   const [activeFaq, setActiveFaq] = useState<string | null>(null);
@@ -159,6 +160,7 @@ export default function App() {
   const [contactLoading, setContactLoading] = useState(false);
   const [contactSuccess, setContactSuccess] = useState('');
   const [contactError, setContactError] = useState('');
+  const [submittedContactSnapshot, setSubmittedContactSnapshot] = useState<any>(null);
 
   // Job Application State
   const [applyForm, setApplyForm] = useState({ fullName: '', email: '', phone: '', coverLetter: '', cvFileName: '' });
@@ -326,6 +328,7 @@ export default function App() {
       const data = await res.json();
       if (res.ok) {
         setContactSuccess(data.message);
+        setSubmittedContactSnapshot({ ...contactForm });
         setContactForm({ name: '', email: '', phone: '', subject: 'General Inquiry', message: '' });
       } else {
         setContactError(data.error || 'Failed to dispatch inquiry.');
@@ -1649,6 +1652,20 @@ export default function App() {
                       {showMapLegend ? <EyeOff size={11} /> : <Eye size={11} />}
                       <span>Legend</span>
                     </button>
+
+                    <button 
+                      id="map-zoom-btn"
+                      onClick={() => setMapZoom(!mapZoom)}
+                      className={`p-1.5 border rounded flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider shadow-sm cursor-pointer transition-colors ${
+                        mapZoom 
+                          ? 'bg-secondary/15 border-secondary text-secondary hover:bg-secondary/25' 
+                          : 'bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500 hover:text-gray-800'
+                      }`}
+                      title={mapZoom ? "Zoom Out Map" : "Zoom In Map"}
+                    >
+                      {mapZoom ? <ZoomOut size={11} /> : <ZoomIn size={11} />}
+                      <span>{mapZoom ? "Zoom Out" : "Zoom Map"}</span>
+                    </button>
                   </div>
 
                   {showMapLegend && (
@@ -1669,8 +1686,27 @@ export default function App() {
                   )}
 
                   {/* Stylized Malawi Country Container */}
-                  <div id="malawi-map-container" className="relative w-[280px] h-[480px] flex items-center justify-center mt-10">
-                    <svg viewBox="0 0 280 480" className="w-full h-full">
+                  <div 
+                    id="malawi-map-container" 
+                    className={`relative w-[280px] h-[480px] flex items-center justify-center mt-10 overflow-hidden rounded-xl border border-gray-100/50 bg-gray-50/20 shadow-inner transition-all duration-300 ${
+                      mapZoom ? 'ring-2 ring-secondary/20 border-secondary/30' : ''
+                    }`}
+                  >
+                    <svg 
+                      viewBox="0 0 280 480" 
+                      className="w-full h-full"
+                      style={{
+                        transform: mapZoom ? 'scale(1.45)' : 'scale(1)',
+                        transformOrigin: 'center',
+                        transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
+                        cursor: mapZoom ? 'zoom-out' : 'zoom-in'
+                      }}
+                      onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                          setMapZoom(!mapZoom);
+                        }
+                      }}
+                    >
                       <defs>
                         {/* Selected Active Gold Glow */}
                         <filter id="active-glow" x="-30%" y="-30%" width="160%" height="160%">
@@ -2658,15 +2694,20 @@ export default function App() {
                     <ul className="space-y-4 text-xs text-gray-300">
                       <li className="flex items-start gap-2.5">
                         <MapPin className="text-secondary shrink-0 mt-0.5" />
-                        <span>{companyInfo?.address || 'Area 14, Lilongwe, Malawi'}</span>
+                        <span>{companyInfo?.address || 'Zion House, Plot 47/3, Area 14, Lilongwe, Malawi'}</span>
                       </li>
                       <li className="flex items-center gap-2.5">
                         <Phone className="text-secondary shrink-0" />
-                        <span>{companyInfo?.phone || '+265 1 772 443'}</span>
+                        <span>
+                          {companyInfo?.phone 
+                            ? (companyInfo.phoneAlternative ? `${companyInfo.phone} / ${companyInfo.phoneAlternative}` : companyInfo.phone)
+                            : '+265 997 914 840 / +265 992 847 803'
+                          }
+                        </span>
                       </li>
                       <li className="flex items-center gap-2.5">
                         <Mail className="text-secondary shrink-0" />
-                        <span>{companyInfo?.email || 'info@zionprojects.mw'}</span>
+                        <span>{companyInfo?.email || 'Zionprojectsltd265@gmail.com'}</span>
                       </li>
                     </ul>
                   </div>
@@ -2705,8 +2746,22 @@ export default function App() {
                   <h3 className="text-base font-black text-primary">Inquiry Transmission</h3>
                   
                   {contactSuccess && (
-                    <div className="bg-green-50 text-green-700 border border-green-200 p-4 rounded text-xs font-bold">
-                      {contactSuccess}
+                    <div className="bg-green-50 text-green-700 border border-green-200 p-5 rounded-xl text-xs space-y-3">
+                      <p className="font-bold">{contactSuccess}</p>
+                      {submittedContactSnapshot && (
+                        <div className="pt-2 border-t border-green-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <span className="text-green-600 font-medium">To send a direct copy to Zion from your email app:</span>
+                          <a
+                            href={`mailto:Zionprojectsltd265@gmail.com?subject=${encodeURIComponent(`Inquiry: ${submittedContactSnapshot.subject} - ${submittedContactSnapshot.name}`)}&body=${encodeURIComponent(
+                              `Hello Zion Projects,\n\nI have submitted an inquiry on your website. Here are my contact details:\n\nName: ${submittedContactSnapshot.name}\nEmail: ${submittedContactSnapshot.email}\nPhone: ${submittedContactSnapshot.phone || 'N/A'}\nSubject: ${submittedContactSnapshot.subject}\n\nMessage:\n${submittedContactSnapshot.message}\n\nBest regards,\n${submittedContactSnapshot.name}`
+                            )}`}
+                            className="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white font-extrabold uppercase tracking-wider py-2 px-4 rounded-lg shadow-sm transition-all"
+                          >
+                            <Mail size={12} />
+                            <span>Send Email Direct</span>
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
 

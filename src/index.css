@@ -110,4 +110,10 @@ h1, h2, h3, h4, h5, h6 {
   fill-opacity: 0.6;
 }
 
+#malawi-map-container path:hover {
+  stroke: var(--color-secondary, #f39c12) !important;
+  stroke-width: 2.5px !important;
+  stroke-opacity: 1 !important;
+}
+
 

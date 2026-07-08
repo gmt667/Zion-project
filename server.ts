@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import { 
@@ -704,6 +705,48 @@ function logSystem(level: 'info' | 'warning' | 'error', message: string, context
   saveDB();
 }
 
+async function sendEmailNotification(subject: string, htmlContent: string) {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || 'no-reply@zionprojects.mw';
+  const to = process.env.COMPANY_EMAIL || 'Zionprojectsltd265@gmail.com';
+
+  if (!host || !user || !pass) {
+    const fallbackMsg = `Email dispatch skipped: SMTP is not configured. (To enable real email delivery to ${to}, configure SMTP_HOST, SMTP_PORT, SMTP_USER, and SMTP_PASS in your secrets configuration).`;
+    console.log(`[Email Dispatch]: ${fallbackMsg}`);
+    logSystem('warning', fallbackMsg, 'SMTP Configuration Missing');
+    return false;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass }
+    });
+
+    await transporter.sendMail({
+      from: `"${from}" <${user}>`,
+      to,
+      subject,
+      html: htmlContent
+    });
+
+    const successMsg = `Successfully dispatched email notification for: "${subject}" to ${to}`;
+    console.log(`[Email Dispatch]: ${successMsg}`);
+    logSystem('info', successMsg, 'Email Dispatched');
+    return true;
+  } catch (err: any) {
+    const errMsg = `Email dispatch failed for "${subject}": ${err.message || err}`;
+    console.error(`[Email Error]: ${errMsg}`, err);
+    logSystem('error', errMsg, 'Nodemailer Transport Error');
+    return false;
+  }
+}
+
 // API ENDPOINTS
 
 // 1. PUBLIC ENDPOINTS
@@ -844,6 +887,52 @@ app.post('/api/contact', (req, res) => {
   logSystem('info', `New inquiry received from ${name}: "${subject}"`);
   saveDB();
 
+  // Trigger SMTP email in background
+  const emailHtml = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px;">
+      <div style="background-color: #0c1a30; padding: 15px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h2 style="color: #f39c12; margin: 0; font-size: 20px; letter-spacing: 1px;">ZION PROJECTS CONSTRUCTION LTD</h2>
+        <p style="color: #ffffff; margin: 5px 0 0 0; font-size: 12px;">New Contact Form Submission</p>
+      </div>
+      <div style="padding: 20px; color: #333333; line-height: 1.5;">
+        <p>Hello Zion Admin Team,</p>
+        <p>A new visitor has submitted an inquiry through the corporate website contact form.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; width: 30%; color: #555555; border-bottom: 1px solid #eeeeee;">Sender Name:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Email Address:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;"><a href="mailto:${email}">${email}</a></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Phone Number:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;">${phone || 'Not Provided'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Subject:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee; font-weight: bold;">${subject}</td>
+          </tr>
+        </table>
+
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #f39c12; margin-top: 20px;">
+          <h4 style="margin: 0 0 10px 0; color: #0c1a30;">Message Content:</h4>
+          <p style="margin: 0; white-space: pre-wrap; font-size: 14px;">${message}</p>
+        </div>
+
+        <p style="margin-top: 30px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; padding-top: 15px; text-align: center;">
+          This is an automated notification from the Zion Projects Construction portal.
+        </p>
+      </div>
+    </div>
+  `;
+
+  sendEmailNotification(`Website Inquiry: ${subject}`, emailHtml).catch(err => {
+    console.error("Background contact email notification dispatch error:", err);
+  });
+
   res.json({ success: true, message: "Thank you! Your message has been sent successfully. Our team will contact you shortly." });
 });
 
@@ -855,6 +944,7 @@ app.post('/api/quote-request', (req, res) => {
   }
 
   const service = database.services.find(s => s.id === serviceId);
+  const serviceTitle = service ? service.title : 'General Engineering';
 
   const newQuote: QuoteRequest = {
     id: `qte-${Date.now()}`,
@@ -863,7 +953,7 @@ app.post('/api/quote-request', (req, res) => {
     phone,
     email,
     serviceId,
-    serviceTitle: service ? service.title : 'General Engineering',
+    serviceTitle,
     budget,
     location,
     description,
@@ -875,6 +965,68 @@ app.post('/api/quote-request', (req, res) => {
   database.quoteRequests.unshift(newQuote);
   logSystem('info', `New Quotation Request submitted by ${name} (${company || 'Individual'})`);
   saveDB();
+
+  // Trigger SMTP email in background
+  const emailHtml = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px;">
+      <div style="background-color: #0c1a30; padding: 15px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h2 style="color: #f39c12; margin: 0; font-size: 20px; letter-spacing: 1px;">ZION PROJECTS CONSTRUCTION LTD</h2>
+        <p style="color: #ffffff; margin: 5px 0 0 0; font-size: 12px;">New Quotation & Project Proposal Request</p>
+      </div>
+      <div style="padding: 20px; color: #333333; line-height: 1.5;">
+        <p>Hello Estimations Division,</p>
+        <p>A new commercial project estimate request has been submitted through the Zion digital portal wizard.</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; width: 35%; color: #555555; border-bottom: 1px solid #eeeeee;">Client Name:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee; font-weight: bold;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Company/Agency:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;">${company || 'Private Individual'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Email Address:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;"><a href="mailto:${email}">${email}</a></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Phone Number:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;">${phone}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Engineering Service:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee; color: #f39c12; font-weight: bold;">${serviceTitle}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Stated Budget Class:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee; font-weight: bold;">${budget}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Project Coordinates:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;">${location}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; font-weight: bold; color: #555555; border-bottom: 1px solid #eeeeee;">Tender Attachment:</td>
+            <td style="padding: 8px 0; border-bottom: 1px solid #eeeeee;">${attachmentName || 'None Attached'}</td>
+          </tr>
+        </table>
+
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #f39c12; margin-top: 20px;">
+          <h4 style="margin: 0 0 10px 0; color: #0c1a30;">Detailed Scope & Design Parameters:</h4>
+          <p style="margin: 0; white-space: pre-wrap; font-size: 14px;">${description}</p>
+        </div>
+
+        <p style="margin-top: 30px; font-size: 12px; color: #777777; border-top: 1px solid #eeeeee; padding-top: 15px; text-align: center;">
+          This is an automated notification from the Zion Projects Construction portal.
+        </p>
+      </div>
+    </div>
+  `;
+
+  sendEmailNotification(`New Quote Request: ${serviceTitle} from ${name}`, emailHtml).catch(err => {
+    console.error("Background quote request email notification dispatch error:", err);
+  });
 
   res.json({ success: true, message: "Your quotation request has been uploaded successfully! Our lead estimators are reviewing your parameters." });
 });

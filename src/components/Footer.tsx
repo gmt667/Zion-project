@@ -119,15 +119,22 @@ export default function Footer({ companyInfo, onNavigate }: FooterProps) {
             <ul className="space-y-4 text-xs text-gray-400">
               <li className="flex items-start gap-2.5">
                 <MapPin size={15} className="text-secondary shrink-0 mt-0.5" />
-                <span>{companyInfo?.address || 'Zion House, Area 4, Lilongwe, Malawi'}</span>
+                <span>{companyInfo?.address || 'Zion House, Plot 47/3, Area 14, Lilongwe, Malawi'}</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone size={15} className="text-secondary shrink-0" />
-                <a href={`tel:${companyInfo?.phone}`} className="hover:text-white transition-colors">{companyInfo?.phone || '+265 1 772 443'}</a>
+                <a href={`tel:${companyInfo?.phone || '+265997914840'}`} className="hover:text-white transition-colors text-wrap break-all">
+                  {companyInfo?.phone 
+                    ? (companyInfo.phoneAlternative ? `${companyInfo.phone} / ${companyInfo.phoneAlternative}` : companyInfo.phone)
+                    : '+265 997 914 840 / +265 992 847 803'
+                  }
+                </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail size={15} className="text-secondary shrink-0" />
-                <a href={`mailto:${companyInfo?.email}`} className="hover:text-white transition-colors">{companyInfo?.email || 'info@zionprojects.mw'}</a>
+                <a href={`mailto:${companyInfo?.email || 'Zionprojectsltd265@gmail.com'}`} className="hover:text-white transition-colors">
+                  {companyInfo?.email || 'Zionprojectsltd265@gmail.com'}
+                </a>
               </li>
               <li className="flex items-start gap-2.5">
                 <Calendar size={15} className="text-secondary shrink-0 mt-0.5" />
