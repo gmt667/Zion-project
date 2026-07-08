@@ -61,7 +61,7 @@ function getInitialData() {
     phoneAlternative: "+265 992 847 803",
     email: "zionprojectsltd265@gmail.com",
     emailInquiries: "zionprojectsltd265@gmail.com",
-    address: "Zion House, Plot 47/3, Area 4, Lilongwe, Malawi",
+    address: "Zion House, Plot 47/3, Area 14, Lilongwe, Malawi",
     workingHours: "Monday – Friday: 08:00 AM – 05:00 PM",
     workingHoursSat: "Closed",
     socialLinks: {

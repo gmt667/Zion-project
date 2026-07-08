@@ -67,29 +67,6 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
           <span className="hidden sm:inline text-gray-400">
             {companyInfo?.workingHours || 'Mon - Fri: 7:30 AM - 5:00 PM'}
           </span>
-          {adminUser ? (
-            <div className="flex items-center gap-2 bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">
-              <LayoutDashboard size={12} className="text-secondary" />
-              <button 
-                onClick={() => handleNavClick('admin')}
-                className="font-medium text-secondary hover:underline cursor-pointer"
-              >
-                Dashboard ({adminUser.fullName.split(' ')[0]})
-              </button>
-              <span className="text-gray-500">|</span>
-              <button onClick={onLogout} className="text-gray-400 hover:text-red-400 cursor-pointer">
-                Logout
-              </button>
-            </div>
-          ) : (
-            <button 
-              onClick={() => handleNavClick('admin-login')}
-              className="flex items-center gap-1 hover:text-white text-gray-400 transition-colors cursor-pointer"
-            >
-              <Lock size={12} />
-              <span>Staff Login</span>
-            </button>
-          )}
         </div>
       </div>
 

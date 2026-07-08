@@ -12,7 +12,6 @@ import Footer from './components/Footer';
 import HeroSlider from './components/HeroSlider';
 import StatCounters from './components/StatCounters';
 import QuoteForm from './components/QuoteForm';
-import AdminPanel from './components/AdminPanel';
 import { 
   CompanyInfo, Service, Project, ProjectCategory, GalleryItem, Album, 
   Blog, Testimonial, ClientPartner, TeamMember, Vacancy, Application, 
@@ -129,7 +128,7 @@ export default function App() {
 
   // UI state controllers
   const [projectFilter, setProjectFilter] = useState<string>('all');
-  const [projectRegionFilter, setProjectRegionFilter] = useState<string>('all');
+  const [projectRegionFilter, setProjectRegionFilter] = useState<string[]>(['all']);
   const [projectDistrictFilter, setProjectDistrictFilter] = useState<string>('all');
   const [projectStatusFilter, setProjectStatusFilter] = useState<string>('all');
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
@@ -175,6 +174,24 @@ export default function App() {
   // Service Comparison States
   const [serviceAId, setServiceAId] = useState<string>('srv-1');
   const [serviceBId, setServiceBId] = useState<string>('srv-2');
+
+  const toggleRegionFilter = (region: string) => {
+    setProjectRegionFilter(prev => {
+      if (region === 'all') {
+        return ['all'];
+      }
+      let next = prev.filter(r => r !== 'all');
+      if (next.includes(region)) {
+        next = next.filter(r => r !== region);
+      } else {
+        next.push(region);
+      }
+      if (next.length === 0) {
+        return ['all'];
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     fetchInitialData();
@@ -385,7 +402,7 @@ export default function App() {
 
   const filteredProjects = projects.filter(proj => {
     const matchesCategory = projectFilter === 'all' || proj.categoryId === projectFilter;
-    const matchesRegion = projectRegionFilter === 'all' || proj.region === projectRegionFilter;
+    const matchesRegion = projectRegionFilter.includes('all') || (proj.region && projectRegionFilter.includes(proj.region));
     const matchesDistrict = projectDistrictFilter === 'all' || proj.district === projectDistrictFilter;
     const matchesStatus = projectStatusFilter === 'all' || proj.status === projectStatusFilter;
     return matchesCategory && matchesRegion && matchesDistrict && matchesStatus;
@@ -1250,7 +1267,7 @@ export default function App() {
                     Need additional legal documentations or tender files?
                   </h3>
                   <p className="text-xs text-gray-500 font-light max-w-2xl mx-auto leading-relaxed">
-                    If your procurement regulations demand additional tax declarations, board resolutions, bank statements, or joint venture articles of association, please reach out directly to our corporate secretaries at Area 4 headquarters.
+                    If your procurement regulations demand additional tax declarations, board resolutions, bank statements, or joint venture articles of association, please reach out directly to our corporate secretaries at Area 14 headquarters.
                   </p>
                   <button
                     onClick={() => { setCurrentView('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
@@ -1660,14 +1677,14 @@ export default function App() {
                         aria-label="Northern Malawi Region"
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
-                          projectRegionFilter === 'Northern Malawi'
+                          projectRegionFilter.includes('Northern Malawi')
                             ? 'fill-secondary/35 stroke-secondary stroke-[3px] map-active-region'
                             : hoveredRegion === 'Northern Malawi'
                             ? 'fill-secondary/20 stroke-secondary/60 stroke-[1.5px]'
                             : 'fill-gray-50 hover:fill-gray-100/80 stroke-gray-300 focus:stroke-secondary/60'
                         } ${clickedRegion === 'Northern Malawi' ? 'animate-map-pulse' : ''}`}
                         style={{
-                          filter: projectRegionFilter === 'Northern Malawi'
+                          filter: projectRegionFilter.includes('Northern Malawi')
                             ? 'url(#active-glow)'
                             : hoveredRegion === 'Northern Malawi'
                             ? 'url(#hover-glow)'
@@ -1676,9 +1693,7 @@ export default function App() {
                         onClick={() => {
                           setClickedRegion('Northern Malawi');
                           setTimeout(() => setClickedRegion(null), 350);
-                          setProjectRegionFilter(
-                            projectRegionFilter === 'Northern Malawi' ? 'all' : 'Northern Malawi'
-                          );
+                          toggleRegionFilter('Northern Malawi');
                           setTimeout(() => {
                             document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }, 50);
@@ -1688,9 +1703,7 @@ export default function App() {
                             e.preventDefault();
                             setClickedRegion('Northern Malawi');
                             setTimeout(() => setClickedRegion(null), 350);
-                            setProjectRegionFilter(
-                              projectRegionFilter === 'Northern Malawi' ? 'all' : 'Northern Malawi'
-                            );
+                            toggleRegionFilter('Northern Malawi');
                             setTimeout(() => {
                               document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }, 50);
@@ -1721,14 +1734,14 @@ export default function App() {
                         aria-label="Central Malawi Region"
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
-                          projectRegionFilter === 'Central Malawi'
+                          projectRegionFilter.includes('Central Malawi')
                             ? 'fill-secondary/35 stroke-secondary stroke-[3px] map-active-region'
                             : hoveredRegion === 'Central Malawi'
                             ? 'fill-secondary/20 stroke-secondary/60 stroke-[1.5px]'
                             : 'fill-gray-50 hover:fill-gray-100/80 stroke-gray-300 focus:stroke-secondary/60'
                         } ${clickedRegion === 'Central Malawi' ? 'animate-map-pulse' : ''}`}
                         style={{
-                          filter: projectRegionFilter === 'Central Malawi'
+                          filter: projectRegionFilter.includes('Central Malawi')
                             ? 'url(#active-glow)'
                             : hoveredRegion === 'Central Malawi'
                             ? 'url(#hover-glow)'
@@ -1737,9 +1750,7 @@ export default function App() {
                         onClick={() => {
                           setClickedRegion('Central Malawi');
                           setTimeout(() => setClickedRegion(null), 350);
-                          setProjectRegionFilter(
-                            projectRegionFilter === 'Central Malawi' ? 'all' : 'Central Malawi'
-                          );
+                          toggleRegionFilter('Central Malawi');
                           setTimeout(() => {
                             document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }, 50);
@@ -1749,9 +1760,7 @@ export default function App() {
                             e.preventDefault();
                             setClickedRegion('Central Malawi');
                             setTimeout(() => setClickedRegion(null), 350);
-                            setProjectRegionFilter(
-                              projectRegionFilter === 'Central Malawi' ? 'all' : 'Central Malawi'
-                            );
+                            toggleRegionFilter('Central Malawi');
                             setTimeout(() => {
                               document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }, 50);
@@ -1782,14 +1791,14 @@ export default function App() {
                         aria-label="Southern Malawi Region"
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
-                          projectRegionFilter === 'Southern Malawi'
+                          projectRegionFilter.includes('Southern Malawi')
                             ? 'fill-secondary/35 stroke-secondary stroke-[3px] map-active-region'
                             : hoveredRegion === 'Southern Malawi'
                             ? 'fill-secondary/20 stroke-secondary/60 stroke-[1.5px]'
                             : 'fill-gray-50 hover:fill-gray-100/80 stroke-gray-300 focus:stroke-secondary/60'
                         } ${clickedRegion === 'Southern Malawi' ? 'animate-map-pulse' : ''}`}
                         style={{
-                          filter: projectRegionFilter === 'Southern Malawi'
+                          filter: projectRegionFilter.includes('Southern Malawi')
                             ? 'url(#active-glow)'
                             : hoveredRegion === 'Southern Malawi'
                             ? 'url(#hover-glow)'
@@ -1798,9 +1807,7 @@ export default function App() {
                         onClick={() => {
                           setClickedRegion('Southern Malawi');
                           setTimeout(() => setClickedRegion(null), 350);
-                          setProjectRegionFilter(
-                            projectRegionFilter === 'Southern Malawi' ? 'all' : 'Southern Malawi'
-                          );
+                          toggleRegionFilter('Southern Malawi');
                           setTimeout(() => {
                             document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }, 50);
@@ -1810,9 +1817,7 @@ export default function App() {
                             e.preventDefault();
                             setClickedRegion('Southern Malawi');
                             setTimeout(() => setClickedRegion(null), 350);
-                            setProjectRegionFilter(
-                              projectRegionFilter === 'Southern Malawi' ? 'all' : 'Southern Malawi'
-                            );
+                            toggleRegionFilter('Southern Malawi');
                             setTimeout(() => {
                               document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }, 50);
@@ -1887,7 +1892,11 @@ export default function App() {
 
                     {/* Simple overlay legend of selected region */}
                     <div className="absolute bottom-4 left-4 bg-primary text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-wider">
-                      Selected Region: <span className="text-secondary">{projectRegionFilter === 'all' ? 'All Malawi' : projectRegionFilter}</span>
+                      Selected Regions: <span className="text-secondary">
+                        {projectRegionFilter.includes('all') 
+                          ? 'All Malawi' 
+                          : projectRegionFilter.map(r => r.replace(' Malawi', '')).join(', ')}
+                      </span>
                     </div>
 
                     {/* Hover Tooltip for Map Regions */}
@@ -1937,9 +1946,9 @@ export default function App() {
                       {['all', 'Northern Malawi', 'Central Malawi', 'Southern Malawi'].map((reg) => (
                         <button
                           key={reg}
-                          onClick={() => setProjectRegionFilter(reg)}
+                          onClick={() => toggleRegionFilter(reg)}
                           className={`px-3 py-2 text-[11px] font-bold uppercase transition-all border rounded-none cursor-pointer text-center ${
-                            projectRegionFilter === reg
+                            projectRegionFilter.includes(reg)
                               ? 'bg-primary border-primary text-secondary'
                               : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                           }`}
@@ -2456,7 +2465,7 @@ export default function App() {
                     <ul className="space-y-4 text-xs text-gray-300">
                       <li className="flex items-start gap-2.5">
                         <MapPin className="text-secondary shrink-0 mt-0.5" />
-                        <span>{companyInfo?.address || 'Area 4, Lilongwe, Malawi'}</span>
+                        <span>{companyInfo?.address || 'Area 14, Lilongwe, Malawi'}</span>
                       </li>
                       <li className="flex items-center gap-2.5">
                         <Phone className="text-secondary shrink-0" />
@@ -2955,7 +2964,7 @@ export default function App() {
                     Need additional legal documentations or tender files?
                   </h3>
                   <p className="text-xs text-gray-500 font-light max-w-2xl mx-auto leading-relaxed">
-                    If your procurement regulations demand additional tax declarations, board resolutions, bank statements, or joint venture articles of association, please reach out directly to our corporate secretaries at Area 4 headquarters.
+                    If your procurement regulations demand additional tax declarations, board resolutions, bank statements, or joint venture articles of association, please reach out directly to our corporate secretaries at Area 14 headquarters.
                   </p>
                   <button
                     onClick={() => { setCurrentView('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
@@ -3161,84 +3170,11 @@ export default function App() {
             </div>
           )}
 
-          {/* ==================================================
-              STAFF LOGIN PANEL VIEW
-              ================================================== */}
-          {currentView === 'admin-login' && (
-            <div className="animate-fade-in flex-1 flex items-center justify-center py-20 px-4">
-              <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 w-full max-w-md space-y-6">
-                
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-primary text-secondary rounded-xl flex items-center justify-center mx-auto mb-3 shadow">
-                    <Lock size={22} />
-                  </div>
-                  <h2 className="text-xl font-black text-primary tracking-tight">Administrative Staff Login</h2>
-                  <p className="text-xs text-gray-400 mt-1">Access Zion Projects site operations, HR Applicants, and Quote logs.</p>
-                </div>
-
-                {loginError && (
-                  <p className="bg-red-50 text-red-700 border border-red-200 p-2.5 rounded text-[11px] font-bold text-center">
-                    {loginError}
-                  </p>
-                )}
-
-                <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase">Username</label>
-                    <input
-                      type="text"
-                      value={loginForm.username}
-                      onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                      placeholder="e.g. admin"
-                      className="border border-gray-200 rounded p-3 focus:outline-none focus:border-secondary text-primary"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="flex flex-col gap-1">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase">Password</label>
-                    <input
-                      type="password"
-                      value={loginForm.password}
-                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                      placeholder="••••••••"
-                      className="border border-gray-200 rounded p-3 focus:outline-none focus:border-secondary text-primary"
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loginLoading}
-                    className="w-full bg-primary hover:bg-primary/95 text-secondary hover:text-white font-extrabold text-xs uppercase tracking-widest py-3.5 rounded shadow cursor-pointer transition-all disabled:opacity-50"
-                  >
-                    {loginLoading ? 'Authenticating Staff...' : 'Login to Dashboard'}
-                  </button>
-                </form>
-
-                <div className="bg-amber-50/50 p-4 rounded border border-secondary/20 text-[10px] text-gray-500 leading-relaxed text-center">
-                  <strong>Standard Demo Account Credentials:</strong><br />
-                  Username: <code className="text-primary font-bold">admin</code> | Password: <code className="text-primary font-bold">admin123</code>
-                </div>
-
-              </div>
-            </div>
-          )}
-
-          {/* ==================================================
-              ADMINSTRATIVE FULL PORTAL PANEL VIEW
-              ================================================== */}
-          {currentView === 'admin' && adminUser && (
-            <AdminPanel adminUser={adminUser} onLogout={handleLogout} />
-          )}
-
         </main>
       )}
 
       {/* 3. MEGA FOOTER MODULE */}
-      {currentView !== 'admin' && (
-        <Footer companyInfo={companyInfo} onNavigate={setCurrentView} />
-      )}
+      <Footer companyInfo={companyInfo} onNavigate={setCurrentView} />
 
       {/* 4. MODALS & LIGHTBOX SLIDES POPUPS */}
 
