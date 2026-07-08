@@ -5,7 +5,7 @@ import {
   Calendar, Award, User, Download, FileText, CheckCircle2, Sparkles, 
   Lock, ArrowLeft, ArrowRightLeft, BookOpen, MessageCircle, HelpCircle, 
   Search, Shield, Users, Info, ChevronRight, Eye, EyeOff, Send, Moon, Sun, Loader2,
-  CreditCard, DollarSign, ThumbsUp, Zap, X
+  CreditCard, DollarSign, ThumbsUp, Zap, X, RefreshCw
 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -1594,7 +1594,7 @@ export default function App() {
                 <button
                   onClick={() => {
                     setProjectFilter('all');
-                    setProjectRegionFilter('all');
+                    setProjectRegionFilter(['all']);
                     setProjectDistrictFilter('all');
                     setProjectStatusFilter('all');
                   }}
@@ -1614,15 +1614,27 @@ export default function App() {
                     <p className="text-[10px] text-gray-400">Click a region to filter projects</p>
                   </div>
 
-                  <button 
-                    id="map-legend-toggle"
-                    onClick={() => setShowMapLegend(!showMapLegend)}
-                    className="absolute top-4 right-4 z-10 p-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider shadow-sm cursor-pointer"
-                    title={showMapLegend ? "Hide Map Legend" : "Show Map Legend"}
-                  >
-                    {showMapLegend ? <EyeOff size={11} /> : <Eye size={11} />}
-                    <span>Legend</span>
-                  </button>
+                  <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5">
+                    <button 
+                      id="map-reset-btn"
+                      onClick={() => setProjectRegionFilter(['all'])}
+                      className="p-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider shadow-sm cursor-pointer"
+                      title="Reset Map Colors and Regional Filters"
+                    >
+                      <RefreshCw size={11} />
+                      <span>Reset Map</span>
+                    </button>
+
+                    <button 
+                      id="map-legend-toggle"
+                      onClick={() => setShowMapLegend(!showMapLegend)}
+                      className="p-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider shadow-sm cursor-pointer"
+                      title={showMapLegend ? "Hide Map Legend" : "Show Map Legend"}
+                    >
+                      {showMapLegend ? <EyeOff size={11} /> : <Eye size={11} />}
+                      <span>Legend</span>
+                    </button>
+                  </div>
 
                   {showMapLegend && (
                     <div id="map-legend-box" className="absolute top-[38px] right-4 z-10 flex flex-col gap-1.5 text-[9px] bg-gray-50 p-2.5 border border-gray-100 animate-fade-in">
@@ -1675,6 +1687,7 @@ export default function App() {
                         d="M 60,30 L 150,30 L 135,115 L 105,160 L 55,120 Z"
                         role="button"
                         aria-label="Northern Malawi Region"
+                        aria-description={`${projects.filter(p => p.region === 'Northern Malawi').length} projects`}
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
                           projectRegionFilter.includes('Northern Malawi')
@@ -1732,6 +1745,7 @@ export default function App() {
                         d="M 105,160 L 135,115 L 165,185 L 175,255 L 125,295 L 85,250 Z"
                         role="button"
                         aria-label="Central Malawi Region"
+                        aria-description={`${projects.filter(p => p.region === 'Central Malawi').length} projects`}
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
                           projectRegionFilter.includes('Central Malawi')
@@ -1789,6 +1803,7 @@ export default function App() {
                         d="M 125,295 L 175,255 L 215,295 L 225,385 L 165,435 L 135,375 Z"
                         role="button"
                         aria-label="Southern Malawi Region"
+                        aria-description={`${projects.filter(p => p.region === 'Southern Malawi').length} projects`}
                         tabIndex={0}
                         className={`transition-all duration-[400ms] ease-in-out cursor-pointer focus:outline-none ${
                           projectRegionFilter.includes('Southern Malawi')
@@ -2057,7 +2072,7 @@ export default function App() {
                     <button
                       onClick={() => {
                         setProjectFilter('all');
-                        setProjectRegionFilter('all');
+                        setProjectRegionFilter(['all']);
                         setProjectDistrictFilter('all');
                         setProjectStatusFilter('all');
                       }}
