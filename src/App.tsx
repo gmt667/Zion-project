@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, HardHat, Route, Layers, Droplets, ShieldAlert, Truck, 
   MapPin, Phone, Mail, Clock, ArrowRight, MessageSquare, ChevronDown, 
@@ -136,6 +137,87 @@ export default function App() {
   const [clickedRegion, setClickedRegion] = useState<string | null>(null);
   const [showMapLegend, setShowMapLegend] = useState<boolean>(true);
   const [mapZoom, setMapZoom] = useState<boolean>(false);
+  const [regionDetailsPanel, setRegionDetailsPanel] = useState<string | null>(null);
+
+  // Region Comparison States
+  const [compareModeActive, setCompareModeActive] = useState<boolean>(false);
+  const [compareSourceRegion, setCompareSourceRegion] = useState<string | null>(null);
+  const [compareTargetRegion, setCompareTargetRegion] = useState<string | null>(null);
+
+  const resetComparison = () => {
+    setCompareModeActive(false);
+    setCompareSourceRegion(null);
+    setCompareTargetRegion(null);
+  };
+
+  const exportRegionToCSV = (regionName: string) => {
+    const regionalProjects = projects.filter(p => p.region === regionName);
+    if (regionalProjects.length === 0) {
+      alert("No projects to export for this region.");
+      return;
+    }
+    const headers = ["Project ID", "Title", "Region", "District", "Location", "Client", "Budget", "Status", "Progress (%)", "Completion Date"];
+    const rows = regionalProjects.map(p => [
+      p.id,
+      `"${(p.title || '').replace(/"/g, '""')}"`,
+      `"${p.region || ''}"`,
+      `"${p.district || ''}"`,
+      `"${(p.location || '').replace(/"/g, '""')}"`,
+      `"${(p.client || '').replace(/"/g, '""')}"`,
+      `"${(p.budget || '').replace(/"/g, '""')}"`,
+      `"${p.status || ''}"`,
+      p.progress,
+      `"${p.completionDate || ''}"`
+    ]);
+    const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${regionName.replace(/\s+/g, '_')}_projects_report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportComparisonToCSV = (regionA: string, regionB: string) => {
+    const projectsA = projects.filter(p => p.region === regionA);
+    const projectsB = projects.filter(p => p.region === regionB);
+    const combined = [...projectsA, ...projectsB];
+    if (combined.length === 0) {
+      alert("No project data to export.");
+      return;
+    }
+    const headers = ["Project ID", "Title", "Region", "District", "Location", "Client", "Budget", "Status", "Progress (%)", "Completion Date"];
+    const rows = combined.map(p => [
+      p.id,
+      `"${(p.title || '').replace(/"/g, '""')}"`,
+      `"${p.region || ''}"`,
+      `"${p.district || ''}"`,
+      `"${(p.location || '').replace(/"/g, '""')}"`,
+      `"${(p.client || '').replace(/"/g, '""')}"`,
+      `"${(p.budget || '').replace(/"/g, '""')}"`,
+      `"${p.status || ''}"`,
+      p.progress,
+      `"${p.completionDate || ''}"`
+    ]);
+    const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `comparison_${regionA.replace(/\s+/g, '_')}_vs_${regionB.replace(/\s+/g, '_')}_projects_report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  const [svgViewBox, setSvgViewBox] = useState<string>("0 0 280 480");
+  const svgViewBoxRef = useRef("0 0 280 480");
+  const activeAnimationRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    svgViewBoxRef.current = svgViewBox;
+  }, [svgViewBox]);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [galleryFilter, setGalleryFilter] = useState<string>('all');
   const [activeFaq, setActiveFaq] = useState<string | null>(null);
@@ -196,6 +278,178 @@ export default function App() {
     });
   };
 
+  const animateViewBox = (targetViewBox: string) => {
+    if (activeAnimationRef.current !== null) {
+      cancelAnimationFrame(activeAnimationRef.current);
+    }
+    const start = svgViewBoxRef.current.split(' ').map(Number);
+    const end = targetViewBox.split(' ').map(Number);
+    if (start.length !== 4 || end.length !== 4) {
+      setSvgViewBox(targetViewBox);
+      return;
+    }
+    const duration = 400; // ms
+    const startTime = performance.now();
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Cubic ease-out
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      const current = start.map((val, i) => val + (end[i] - val) * ease);
+      const newBox = current.map(v => v.toFixed(2)).join(' ');
+      setSvgViewBox(newBox);
+
+      if (progress < 1) {
+        activeAnimationRef.current = requestAnimationFrame(step);
+      } else {
+        activeAnimationRef.current = null;
+      }
+    };
+
+    activeAnimationRef.current = requestAnimationFrame(step);
+  };
+
+  const getRegionalDeploymentSummary = (regionName: string) => {
+    const regionalProjects = projects.filter(p => p.region === regionName);
+    const materialsSet = new Set<string>();
+    const equipmentSet = new Set<string>();
+    const activeDivisions = new Set<string>();
+    
+    regionalProjects.forEach(proj => {
+      let serviceId = 'srv-1';
+      if (proj.categoryId === 'cat-1') serviceId = 'srv-2';
+      else if (proj.categoryId === 'cat-2') serviceId = 'srv-1';
+      else if (proj.categoryId === 'cat-3') serviceId = 'srv-3';
+      else if (proj.categoryId === 'cat-4') {
+        if (proj.title.toLowerCase().includes('sewer') || proj.title.toLowerCase().includes('wastewater') || proj.title.toLowerCase().includes('treatment')) {
+          serviceId = 'srv-5';
+        } else {
+          serviceId = 'srv-4';
+        }
+      }
+      
+      const specs = serviceSpecs[serviceId];
+      if (specs) {
+        specs.materials.split(', ').forEach(m => materialsSet.add(m));
+        specs.equipment.split(', ').forEach(e => equipmentSet.add(e));
+        
+        const srv = services.find(s => s.id === serviceId);
+        if (srv) {
+          activeDivisions.add(srv.title);
+        }
+      }
+    });
+
+    return {
+      projectsList: regionalProjects,
+      materials: Array.from(materialsSet),
+      equipment: Array.from(equipmentSet),
+      divisions: Array.from(activeDivisions)
+    };
+  };
+
+  const handleRegionClick = (region: string, pathD: string) => {
+    setClickedRegion(region);
+    setTimeout(() => setClickedRegion(null), 350);
+
+    if (compareModeActive) {
+      if (region === compareSourceRegion) {
+        return;
+      }
+      setCompareTargetRegion(region);
+      setProjectRegionFilter([compareSourceRegion!, region]);
+      return;
+    }
+
+    toggleRegionFilter(region);
+    setRegionDetailsPanel(region);
+
+    // Calculate centroid of the path coordinates
+    const matches = pathD.match(/(-?\d+(\.\d+)?),(-?\d+(\.\d+)?)/g);
+    let cx = 140;
+    let cy = 240;
+    if (matches) {
+      let sumX = 0;
+      let sumY = 0;
+      matches.forEach(m => {
+        const [xStr, yStr] = m.split(',');
+        sumX += parseFloat(xStr);
+        sumY += parseFloat(yStr);
+      });
+      cx = sumX / matches.length;
+      cy = sumY / matches.length;
+    }
+
+    // Set new zoomed-in viewBox (scale factor 1.45)
+    const zoomFactor = 1.45;
+    const w = 280 / zoomFactor;
+    const h = 480 / zoomFactor;
+
+    let minX = cx - w / 2;
+    let minY = cy - h / 2;
+
+    // Constrain to keep in view boundaries
+    minX = Math.max(0, Math.min(280 - w, minX));
+    minY = Math.max(0, Math.min(480 - h, minY));
+
+    const targetViewBox = `${minX.toFixed(2)} ${minY.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`;
+
+    setMapZoom(true);
+    animateViewBox(targetViewBox);
+
+    setTimeout(() => {
+      document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
+  useEffect(() => {
+    if (mapZoom) {
+      if (svgViewBoxRef.current === "0 0 280 480") {
+        const activeRegion = projectRegionFilter.find(r => r !== 'all');
+        if (activeRegion) {
+          const pathD = activeRegion === 'Northern Malawi' 
+            ? "M 60,30 L 150,30 L 135,115 L 105,160 L 55,120 Z"
+            : activeRegion === 'Central Malawi'
+            ? "M 105,160 L 135,115 L 165,185 L 175,255 L 125,295 L 85,250 Z"
+            : "M 125,295 L 175,255 L 215,295 L 225,385 L 165,435 L 135,375 Z";
+          
+          const matches = pathD.match(/(-?\d+(\.\d+)?),(-?\d+(\.\d+)?)/g);
+          let cx = 140;
+          let cy = 240;
+          if (matches) {
+            let sumX = 0;
+            let sumY = 0;
+            matches.forEach(m => {
+              const [xStr, yStr] = m.split(',');
+              sumX += parseFloat(xStr);
+              sumY += parseFloat(yStr);
+            });
+            cx = sumX / matches.length;
+            cy = sumY / matches.length;
+          }
+          const zoomFactor = 1.45;
+          const w = 280 / zoomFactor;
+          const h = 480 / zoomFactor;
+          let minX = Math.max(0, Math.min(280 - w, cx - w / 2));
+          let minY = Math.max(0, Math.min(480 - h, cy - h / 2));
+          animateViewBox(`${minX.toFixed(2)} ${minY.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
+        } else {
+          // Centered zoom-in
+          const zoomFactor = 1.45;
+          const w = 280 / zoomFactor;
+          const h = 480 / zoomFactor;
+          const minX = (280 - w) / 2;
+          const minY = (480 - h) / 2;
+          animateViewBox(`${minX.toFixed(2)} ${minY.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
+        }
+      }
+    } else {
+      animateViewBox("0 0 280 480");
+    }
+  }, [mapZoom]);
+
   useEffect(() => {
     fetchInitialData();
     // Restore session if found in localStorage
@@ -207,17 +461,7 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (currentView === 'downloads') {
-      setCurrentView('about');
-      setTimeout(() => {
-        const el = document.getElementById('compliance-section');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 150);
-    }
-  }, [currentView]);
+
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -971,331 +1215,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Compliance & Audit Section (Integrated inside About Us) */}
-              <div id="compliance-section" className="border-t border-gray-200 pt-16 space-y-12">
-                
-                {/* Header Banner */}
-                <div className="bg-primary text-white p-8 md:p-12 rounded-none border-l-4 border-l-secondary relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-8 shadow-md">
-                  <div className="absolute inset-0 bg-radial-gradient from-secondary/10 to-transparent pointer-events-none" />
-                  <div className="space-y-3 max-w-3xl relative z-10">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-secondary bg-secondary/10 px-3 py-1.5 border border-secondary/30">
-                      LEGAL STATUS & AUDIT
-                    </span>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tight uppercase">
-                      Company Registrations & Certifications
-                    </h1>
-                    <p className="text-xs md:text-sm text-gray-300 font-light max-w-2xl leading-relaxed">
-                      Zion Projects Construction Ltd operates in strict compliance with the laws of the Republic of Malawi. Here you can inspect our legal standing, download certified documents, and instantly verify our active Grade-A contractor licenses.
-                    </p>
-                  </div>
-                  <div className="bg-white/5 border border-white/10 p-4 shrink-0 grid grid-cols-2 gap-6 min-w-[240px] text-center backdrop-blur-sm relative z-10">
-                    <div>
-                      <span className="block text-2xl font-black text-secondary">Grade-A</span>
-                      <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">NCIC Status</span>
-                    </div>
-                    <div className="border-l border-white/10 pl-6">
-                      <span className="block text-2xl font-black text-emerald-400">100%</span>
-                      <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">Tax Compliance</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Main Content Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                  
-                  {/* Left Column: Category Selector & Verification Panel */}
-                  <div className="lg:col-span-4 space-y-8">
-                    
-                    {/* Interactive Real-time Verification Tool */}
-                    <div className="bg-white border border-gray-200 p-6 shadow-sm flex flex-col gap-5">
-                      <div className="border-b border-gray-100 pb-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Shield className="w-5 h-5 text-secondary" />
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-primary">
-                            Contractor Verification
-                          </h3>
-                        </div>
-                        <p className="text-[10px] text-gray-500 font-light">
-                          Verify the authenticity of Zion Projects' credentials against our local database directory.
-                        </p>
-                      </div>
-
-                      <form onSubmit={handleVerifyCheck} className="space-y-3">
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="Enter Number (e.g. C-1224/2012)"
-                            value={verifyInput}
-                            onChange={(e) => setVerifyInput(e.target.value)}
-                            className="w-full bg-gray-50 border border-gray-300 rounded-none py-2.5 pl-3 pr-10 text-xs focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary text-primary font-mono placeholder:font-sans"
-                          />
-                          <button
-                            type="submit"
-                            className="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-primary text-secondary hover:bg-secondary hover:text-primary transition-all rounded-none cursor-pointer flex items-center justify-center border border-secondary/20"
-                          >
-                            <Search size={13} />
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] text-gray-400 font-medium">Quick examples:</span>
-                          <button 
-                            type="button" 
-                            onClick={() => { setVerifyInput('C-1224/2012'); setVerifyError(''); setVerifiedCert(null); }}
-                            className="text-[9px] text-secondary font-bold hover:underline"
-                          >
-                            C-1224/2012
-                          </button>
-                          <span className="text-gray-300">|</span>
-                          <button 
-                            type="button" 
-                            onClick={() => { setVerifyInput('NCIC-CIV-G1-90412'); setVerifyError(''); setVerifiedCert(null); }}
-                            className="text-[9px] text-secondary font-bold hover:underline"
-                          >
-                            NCIC-CIV-G1-90412
-                          </button>
-                        </div>
-                      </form>
-
-                      {/* Verification Results Panel */}
-                      {verifiedCert && (
-                        <div className="bg-emerald-50/60 border border-emerald-200 p-4 rounded-none animate-fade-in space-y-3">
-                          <div className="flex items-start gap-2.5">
-                            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">
-                                CREDENTIAL VERIFIED
-                              </span>
-                              <h4 className="text-xs font-bold text-gray-800">{verifiedCert.title}</h4>
-                              <p className="text-[10px] text-gray-500 leading-normal font-light">
-                                Issued by {verifiedCert.authority} under license register <strong className="font-mono text-emerald-700">{verifiedCert.number}</strong>.
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white p-2.5 border border-emerald-100 rounded-none grid grid-cols-2 gap-2 text-[9px] font-bold text-gray-600 font-mono">
-                            <div>
-                              <span className="text-gray-400 block text-[8px] font-sans">STATUS</span>
-                              <span className="text-emerald-600">{verifiedCert.status}</span>
-                            </div>
-                            <div>
-                              <span className="text-gray-400 block text-[8px] font-sans">EXPIRY DATE</span>
-                              <span>{verifiedCert.expiryDate}</span>
-                            </div>
-                          </div>
-                          <p className="text-[9px] text-emerald-700/80 leading-relaxed font-light">
-                            ✓ Security Handshake: Cleared by internal database verification as fully active and legally compliant.
-                          </p>
-                        </div>
-                      )}
-
-                      {verifyError && (
-                        <div className="bg-red-50 border border-red-200 p-4 rounded-none text-xs text-red-700 flex items-start gap-2 animate-fade-in">
-                          <span className="font-bold text-red-500 shrink-0">!</span>
-                          <p className="leading-relaxed font-light text-[11px]">{verifyError}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Category Filter Menu */}
-                    <div className="bg-white border border-gray-200 p-6 shadow-sm space-y-4">
-                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-primary border-b border-gray-100 pb-2">
-                        Filter By Category
-                      </h3>
-                      <div className="flex flex-col gap-1.5">
-                        {[
-                          { id: 'all', label: 'All Registrations' },
-                          { id: 'Legal & Incorporation', label: 'Legal & Incorporation' },
-                          { id: 'NCIC Construction Licenses', label: 'NCIC Construction Licenses' },
-                          { id: 'Tax & Municipal', label: 'Tax & Municipal' },
-                          { id: 'Safety & Professional', label: 'Safety & Professional' }
-                        ].map(cat => (
-                          <button
-                            key={cat.id}
-                            onClick={() => setCertCategory(cat.id)}
-                            className={`w-full text-left px-3 py-2 text-xs font-semibold uppercase tracking-wider transition-all rounded-none flex justify-between items-center ${
-                              certCategory === cat.id
-                                ? 'bg-primary text-secondary border-l-4 border-l-secondary font-bold'
-                                : 'text-gray-600 hover:bg-gray-50'
-                            }`}
-                          >
-                            <span>{cat.label}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 font-bold ${
-                              certCategory === cat.id ? 'bg-secondary text-primary' : 'bg-gray-100 text-gray-500'
-                            }`}>
-                              {cat.id === 'all' 
-                                ? certificates.length 
-                                : certificates.filter(c => c.category === cat.id).length
-                              }
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Credibility Guarantee block */}
-                    <div className="bg-[#FAF7F2] border border-[#E9E1CE] p-6 rounded-none space-y-3">
-                      <h4 className="text-xs font-bold text-[#8C6D3B] uppercase tracking-wide flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-secondary" />
-                        Compliance & Audit Policy
-                      </h4>
-                      <p className="text-[11px] text-[#6E5A35] leading-relaxed font-light">
-                        Many institutional clients, including Government departments, municipal assemblies, and international organizations require proof of legal incorporation, tax status, and NCIC registrations. Zion Projects provides this portal to afford absolute transparency and security in the commercial bidding phase.
-                      </p>
-                      <p className="text-[10px] text-gray-400 italic">
-                        Last audited by independent structural and tax bodies: July 2026.
-                      </p>
-                    </div>
-
-                  </div>
-
-                  {/* Right Column: Search & Certificates Grid */}
-                  <div className="lg:col-span-8 space-y-6">
-                    
-                    {/* Search and results info bar */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 border border-gray-200">
-                      <div className="relative w-full sm:max-w-xs">
-                        <input
-                          type="text"
-                          placeholder="Search certificates..."
-                          value={certSearch}
-                          onChange={(e) => setCertSearch(e.target.value)}
-                          className="w-full bg-gray-50 border border-gray-200 rounded-none py-2 px-3 pl-8 text-xs text-primary focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary"
-                        />
-                        <Search size={12} className="absolute left-2.5 top-3 text-gray-400" />
-                      </div>
-                      
-                      <div className="text-[11px] font-bold text-gray-500">
-                        Showing {filteredCerts.length} of {certificates.length} Credentials
-                      </div>
-                    </div>
-
-                    {/* Certs Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {filteredCerts.length === 0 ? (
-                        <div className="col-span-full bg-white border border-gray-100 py-16 text-center shadow-sm">
-                          <span className="text-sm font-bold text-gray-400 block mb-2">No Matching Certifications Found</span>
-                          <button 
-                            onClick={() => { setCertSearch(''); setCertCategory('all'); }}
-                            className="text-xs text-secondary font-bold hover:underline"
-                          >
-                            Reset all filters
-                          </button>
-                        </div>
-                      ) : (
-                        filteredCerts.map(cert => {
-                          const isDownloading = downloadingCertId === cert.id;
-                          return (
-                            <div 
-                              key={cert.id} 
-                              className="bg-white p-6 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-6 relative group"
-                            >
-                              <div className="space-y-4">
-                                {/* Header of card */}
-                                <div className="flex justify-between items-start">
-                                  <div className="p-2 bg-gray-50 border border-gray-100 rounded-none">
-                                    {selectCertIcon(cert.category)}
-                                  </div>
-                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
-                                    cert.status === 'Grade-A Registered'
-                                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                      : cert.status === 'Compliant'
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                      : cert.status === 'Verified'
-                                      ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                                      : 'bg-blue-50 text-blue-700 border-blue-200'
-                                  }`}>
-                                    {cert.status}
-                                  </span>
-                                </div>
-
-                                <div className="space-y-1">
-                                  <span className="text-[9px] uppercase tracking-wider text-gray-400 font-extrabold block">
-                                    {cert.category}
-                                  </span>
-                                  <h3 className="text-sm font-bold text-primary group-hover:text-secondary transition-colors line-clamp-1">
-                                    {cert.title}
-                                  </h3>
-                                  <p className="text-[11px] text-gray-500 font-light leading-relaxed line-clamp-2">
-                                    {cert.description}
-                                  </p>
-                                </div>
-
-                                {/* Numbers & Expiry Section */}
-                                <div className="bg-gray-50 p-3 space-y-1.5 border border-gray-100">
-                                  <div className="flex justify-between text-[10px]">
-                                    <span className="text-gray-400 font-medium">Doc Number:</span>
-                                    <span className="font-mono text-primary font-bold">{cert.number}</span>
-                                  </div>
-                                  <div className="flex justify-between text-[10px]">
-                                    <span className="text-gray-400 font-medium">Expiry:</span>
-                                    <span className={`font-semibold ${cert.expiryDate.includes('Permanent') ? 'text-emerald-600' : 'text-gray-600'}`}>
-                                      {cert.expiryDate}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Footer Action buttons */}
-                              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-                                <button
-                                  onClick={() => setInspectedCert(cert)}
-                                  className="py-2 bg-gray-100 hover:bg-gray-200 text-primary text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer text-center"
-                                >
-                                  View Certificate
-                                </button>
-                                
-                                <button
-                                  onClick={() => {
-                                    setDownloadingCertId(cert.id);
-                                    setTimeout(() => {
-                                      setDownloadingCertId(null);
-                                      setInspectedCert(cert);
-                                      alert(`PDF Export Initiated: Formulating official print spec sheet for registration: "${cert.title}" (License: ${cert.number}). Select Print Destination to save as PDF.`);
-                                    }, 1000);
-                                  }}
-                                  disabled={isDownloading}
-                                  className="py-2 bg-primary hover:bg-secondary text-secondary hover:text-primary disabled:bg-primary/50 text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer text-center flex items-center justify-center gap-1 border border-secondary/20"
-                                >
-                                  {isDownloading ? (
-                                    <>
-                                      <Loader2 className="animate-spin w-3 h-3 text-secondary" />
-                                      <span>Preparing...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Download size={11} />
-                                      <span>Download PDF</span>
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-
-                  </div>
-
-                </div>
-
-                {/* FAQ section reference */}
-                <div className="bg-white p-8 border border-gray-200 text-center space-y-4">
-                  <h3 className="text-lg font-black text-primary uppercase">
-                    Need additional legal documentations or tender files?
-                  </h3>
-                  <p className="text-xs text-gray-500 font-light max-w-2xl mx-auto leading-relaxed">
-                    If your procurement regulations demand additional tax declarations, board resolutions, bank statements, or joint venture articles of association, please reach out directly to our corporate secretaries at Area 14 headquarters.
-                  </p>
-                  <button
-                    onClick={() => { setCurrentView('contact'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                    className="inline-flex bg-secondary hover:bg-primary text-primary hover:text-white px-8 py-3 font-bold text-xs uppercase tracking-widest border border-secondary transition-all cursor-pointer"
-                  >
-                    Contact Procurement Division
-                  </button>
-                </div>
-
-              </div>
 
             </div>
           )}
@@ -1615,6 +1535,9 @@ export default function App() {
                     setProjectRegionFilter(['all']);
                     setProjectDistrictFilter('all');
                     setProjectStatusFilter('all');
+                    setRegionDetailsPanel(null);
+                    setMapZoom(false);
+                    resetComparison();
                   }}
                   className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs uppercase tracking-wider rounded-none border border-gray-200 transition-all cursor-pointer"
                 >
@@ -1626,7 +1549,7 @@ export default function App() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* 1. Interactive Styled SVG Map of Malawi */}
-                <div className="lg:col-span-5 bg-white border border-gray-200 p-6 flex flex-col items-center justify-center relative shadow-sm">
+                <div className="lg:col-span-5 bg-white border border-gray-200 p-6 flex flex-col items-center justify-center relative shadow-sm overflow-hidden min-h-[580px]">
                   <div className="absolute top-4 left-4">
                     <h3 className="text-xs font-bold text-primary uppercase tracking-wider">Malawi Regional Map</h3>
                     <p className="text-[10px] text-gray-400">Click a region to filter projects</p>
@@ -1635,7 +1558,12 @@ export default function App() {
                   <div className="absolute top-4 right-4 z-10 flex items-center gap-1.5">
                     <button 
                       id="map-reset-btn"
-                      onClick={() => setProjectRegionFilter(['all'])}
+                      onClick={() => { 
+                        setProjectRegionFilter(['all']); 
+                        setRegionDetailsPanel(null); 
+                        setMapZoom(false);
+                        resetComparison();
+                      }}
                       className="p-1.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded text-gray-500 hover:text-gray-800 transition-colors flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider shadow-sm cursor-pointer"
                       title="Reset Map Colors and Regional Filters"
                     >
@@ -1689,16 +1617,13 @@ export default function App() {
                   <div 
                     id="malawi-map-container" 
                     className={`relative w-[280px] h-[480px] flex items-center justify-center mt-10 overflow-hidden rounded-xl border border-gray-100/50 bg-gray-50/20 shadow-inner transition-all duration-300 ${
-                      mapZoom ? 'ring-2 ring-secondary/20 border-secondary/30' : ''
+                      mapZoom ? 'ring-2 ring-secondary/20 border-secondary/30 shadow-2xl shadow-primary/15 -translate-y-1 bg-white/80' : ''
                     }`}
                   >
                     <svg 
-                      viewBox="0 0 280 480" 
+                      viewBox={svgViewBox} 
                       className="w-full h-full"
                       style={{
-                        transform: mapZoom ? 'scale(1.45)' : 'scale(1)',
-                        transformOrigin: 'center',
-                        transition: 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)',
                         cursor: mapZoom ? 'zoom-out' : 'zoom-in'
                       }}
                       onClick={(e) => {
@@ -1755,23 +1680,11 @@ export default function App() {
                             ? 'url(#hover-glow)'
                             : 'none'
                         }}
-                        onClick={() => {
-                          setClickedRegion('Northern Malawi');
-                          setTimeout(() => setClickedRegion(null), 350);
-                          toggleRegionFilter('Northern Malawi');
-                          setTimeout(() => {
-                            document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }, 50);
-                        }}
+                        onClick={() => handleRegionClick('Northern Malawi', "M 60,30 L 150,30 L 135,115 L 105,160 L 55,120 Z")}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            setClickedRegion('Northern Malawi');
-                            setTimeout(() => setClickedRegion(null), 350);
-                            toggleRegionFilter('Northern Malawi');
-                            setTimeout(() => {
-                              document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 50);
+                            handleRegionClick('Northern Malawi', "M 60,30 L 150,30 L 135,115 L 105,160 L 55,120 Z");
                           }
                         }}
                         onMouseEnter={() => {
@@ -1827,23 +1740,11 @@ export default function App() {
                             ? 'url(#hover-glow)'
                             : 'none'
                         }}
-                        onClick={() => {
-                          setClickedRegion('Central Malawi');
-                          setTimeout(() => setClickedRegion(null), 350);
-                          toggleRegionFilter('Central Malawi');
-                          setTimeout(() => {
-                            document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }, 50);
-                        }}
+                        onClick={() => handleRegionClick('Central Malawi', "M 105,160 L 135,115 L 165,185 L 175,255 L 125,295 L 85,250 Z")}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            setClickedRegion('Central Malawi');
-                            setTimeout(() => setClickedRegion(null), 350);
-                            toggleRegionFilter('Central Malawi');
-                            setTimeout(() => {
-                              document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 50);
+                            handleRegionClick('Central Malawi', "M 105,160 L 135,115 L 165,185 L 175,255 L 125,295 L 85,250 Z");
                           }
                         }}
                         onMouseEnter={() => {
@@ -1899,23 +1800,11 @@ export default function App() {
                             ? 'url(#hover-glow)'
                             : 'none'
                         }}
-                        onClick={() => {
-                          setClickedRegion('Southern Malawi');
-                          setTimeout(() => setClickedRegion(null), 350);
-                          toggleRegionFilter('Southern Malawi');
-                          setTimeout(() => {
-                            document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }, 50);
-                        }}
+                        onClick={() => handleRegionClick('Southern Malawi', "M 125,295 L 175,255 L 215,295 L 225,385 L 165,435 L 135,375 Z")}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            setClickedRegion('Southern Malawi');
-                            setTimeout(() => setClickedRegion(null), 350);
-                            toggleRegionFilter('Southern Malawi');
-                            setTimeout(() => {
-                              document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }, 50);
+                            handleRegionClick('Southern Malawi', "M 125,295 L 175,255 L 215,295 L 225,385 L 165,435 L 135,375 Z");
                           }
                         }}
                         onMouseEnter={() => {
@@ -1970,12 +1859,7 @@ export default function App() {
                             }`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setClickedRegion('Northern Malawi');
-                              setTimeout(() => setClickedRegion(null), 350);
-                              toggleRegionFilter('Northern Malawi');
-                              setTimeout(() => {
-                                document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }, 50);
+                              handleRegionClick('Northern Malawi', "M 60,30 L 150,30 L 135,115 L 105,160 L 55,120 Z");
                             }}
                             title={`Northern Malawi: ${projects.filter(p => p.region === 'Northern Malawi').length} projects`}
                           />
@@ -2010,12 +1894,7 @@ export default function App() {
                             }`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setClickedRegion('Central Malawi');
-                              setTimeout(() => setClickedRegion(null), 350);
-                              toggleRegionFilter('Central Malawi');
-                              setTimeout(() => {
-                                document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }, 50);
+                              handleRegionClick('Central Malawi', "M 105,160 L 135,115 L 165,185 L 175,255 L 125,295 L 85,250 Z");
                             }}
                             title={`Central Malawi: ${projects.filter(p => p.region === 'Central Malawi').length} projects`}
                           />
@@ -2050,12 +1929,7 @@ export default function App() {
                             }`}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setClickedRegion('Southern Malawi');
-                              setTimeout(() => setClickedRegion(null), 350);
-                              toggleRegionFilter('Southern Malawi');
-                              setTimeout(() => {
-                                document.getElementById('project-results-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }, 50);
+                              handleRegionClick('Southern Malawi', "M 125,295 L 175,255 L 215,295 L 225,385 L 165,435 L 135,375 Z");
                             }}
                             title={`Southern Malawi: ${projects.filter(p => p.region === 'Southern Malawi').length} projects`}
                           />
@@ -2158,6 +2032,509 @@ export default function App() {
                       </div>
                     )}
                   </div>
+
+                  {/* Dynamic Regional Resource Side-Panel */}
+                  <AnimatePresence>
+                    {regionDetailsPanel && (
+                      <motion.div 
+                        id="regional-resources-panel"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: '100%', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                        className={`absolute top-0 right-0 w-full ${compareModeActive && compareTargetRegion ? 'sm:w-[620px]' : 'sm:w-[320px]'} bg-slate-950 text-white shadow-2xl border-l border-slate-800 z-20 flex flex-col overflow-hidden transition-all duration-300`}
+                      >
+                        {compareModeActive && compareSourceRegion ? (
+                          <div className="flex flex-col h-full bg-slate-950 text-white">
+                            {/* Comparison Header */}
+                            <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                              <div>
+                                <div className="flex items-center gap-1.5 text-secondary text-[9px] font-black uppercase tracking-widest">
+                                  <span className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span>
+                                  Regional Comparison
+                                </div>
+                                <h4 className="text-xs font-black text-white mt-1 uppercase tracking-tight flex items-center gap-1.5">
+                                  {compareSourceRegion.replace(' Malawi', '')} <ArrowRightLeft size={10} className="text-secondary" /> {compareTargetRegion ? compareTargetRegion.replace(' Malawi', '') : 'Select Region...'}
+                                </h4>
+                              </div>
+                              <button 
+                                onClick={() => {
+                                  resetComparison();
+                                  setRegionDetailsPanel(null);
+                                  setProjectRegionFilter(['all']);
+                                }}
+                                className="p-1 text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                title="Close Comparison"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+
+                            {/* Scrollable Content */}
+                            <div className="p-4 flex-1 overflow-y-auto space-y-5 custom-scrollbar text-xs">
+                              
+                              {/* If no target region has been selected yet */}
+                              {!compareTargetRegion ? (
+                                <div className="py-8 text-center space-y-4">
+                                  <div className="w-12 h-12 bg-slate-900 rounded-full border border-slate-800 flex items-center justify-center mx-auto animate-bounce">
+                                    <ArrowRightLeft size={20} className="text-secondary" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <h5 className="font-bold text-white uppercase text-[10px] tracking-wider">Awaiting Target Selection</h5>
+                                    <p className="text-[10px] text-gray-400 max-w-[220px] mx-auto leading-relaxed">
+                                      Click another region on the interactive map of Malawi to begin comparative analysis.
+                                    </p>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      setCompareModeActive(false);
+                                      setCompareSourceRegion(null);
+                                      setProjectRegionFilter([regionDetailsPanel]);
+                                    }}
+                                    className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[9px] uppercase tracking-wider text-gray-300 transition-colors cursor-pointer"
+                                  >
+                                    Cancel Comparison
+                                  </button>
+                                </div>
+                              ) : (() => {
+                                // We have both source and target regions!
+                                const summaryA = getRegionalDeploymentSummary(compareSourceRegion);
+                                const summaryB = getRegionalDeploymentSummary(compareTargetRegion);
+                                
+                                return (
+                                  <>
+                                    {/* Quick Action bar inside comparison */}
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <button
+                                        onClick={() => {
+                                          // Swap source and target
+                                          const temp = compareSourceRegion;
+                                          setCompareSourceRegion(compareTargetRegion);
+                                          setCompareTargetRegion(temp);
+                                          setProjectRegionFilter([compareTargetRegion, temp]);
+                                        }}
+                                        className="py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 rounded text-[9px] font-bold text-gray-300 flex items-center justify-center gap-1 uppercase tracking-wider cursor-pointer"
+                                      >
+                                        <RefreshCw size={10} className="text-secondary" /> Swap Regions
+                                      </button>
+                                      <button
+                                        onClick={() => exportComparisonToCSV(compareSourceRegion, compareTargetRegion)}
+                                        className="py-1.5 px-2 bg-slate-900 hover:bg-slate-800 border border-slate-850 rounded text-[9px] font-bold text-gray-300 flex items-center justify-center gap-1 uppercase tracking-wider cursor-pointer"
+                                      >
+                                        <Download size={10} className="text-secondary" /> Export Both
+                                      </button>
+                                    </div>
+
+                                    {/* Metrics Side-by-Side Comparison */}
+                                    <div className="space-y-3">
+                                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 block border-b border-slate-800 pb-1">
+                                        Metrics Summary
+                                      </span>
+                                      <div className="border border-slate-800 rounded bg-slate-900/40 divide-y divide-slate-800/60 overflow-hidden">
+                                        <div className="grid grid-cols-3 text-center text-[8px] bg-slate-900 p-1.5 font-bold uppercase tracking-wider text-gray-400">
+                                          <div>{compareSourceRegion.replace(' Malawi', '')}</div>
+                                          <div className="text-secondary">Metric</div>
+                                          <div>{compareTargetRegion.replace(' Malawi', '')}</div>
+                                        </div>
+                                        
+                                        {/* Active Sites */}
+                                        <div className="grid grid-cols-3 text-center p-2 items-center">
+                                          <div className="font-black text-white text-sm">{summaryA.projectsList.length}</div>
+                                          <div className="text-[9px] text-gray-400 font-medium">Active Sites</div>
+                                          <div className="font-black text-white text-sm">{summaryB.projectsList.length}</div>
+                                        </div>
+                                        
+                                        {/* Divisions */}
+                                        <div className="grid grid-cols-3 text-center p-2 items-center">
+                                          <div className="font-black text-white text-sm">{summaryA.divisions.length}</div>
+                                          <div className="text-[9px] text-gray-400 font-medium">Divisions</div>
+                                          <div className="font-black text-white text-sm">{summaryB.divisions.length}</div>
+                                        </div>
+
+                                        {/* Progress Avg */}
+                                        {(() => {
+                                          const avgA = summaryA.projectsList.length 
+                                            ? Math.round(summaryA.projectsList.reduce((acc, p) => acc + p.progress, 0) / summaryA.projectsList.length)
+                                            : 0;
+                                          const avgB = summaryB.projectsList.length 
+                                            ? Math.round(summaryB.projectsList.reduce((acc, p) => acc + p.progress, 0) / summaryB.projectsList.length)
+                                            : 0;
+                                          return (
+                                            <div className="grid grid-cols-3 text-center p-2 items-center">
+                                              <div className="font-black text-white text-sm">{avgA}%</div>
+                                              <div className="text-[9px] text-gray-400 font-medium">Avg Progress</div>
+                                              <div className="font-black text-white text-sm">{avgB}%</div>
+                                            </div>
+                                          );
+                                        })()}
+                                      </div>
+                                    </div>
+
+                                    {/* Side-by-side Columns */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                      
+                                      {/* Left Column: Source Region */}
+                                      <div className="space-y-4 border-r border-slate-850 pr-2">
+                                        <h5 className="font-black text-[10px] text-secondary border-b border-slate-800 pb-1 uppercase tracking-tight">
+                                          {compareSourceRegion.replace(' Malawi', '')} Details
+                                        </h5>
+                                        
+                                        {/* Divisions */}
+                                        <div className="space-y-1">
+                                          <span className="text-[8px] uppercase tracking-wider text-gray-400 block font-bold">Divisions</span>
+                                          {summaryA.divisions.length === 0 ? (
+                                            <span className="text-[8px] text-gray-500 italic block">None</span>
+                                          ) : (
+                                            <div className="flex flex-wrap gap-1">
+                                              {summaryA.divisions.map((div, i) => (
+                                                <span key={i} className="bg-primary/30 border border-primary-light/5 text-white text-[8px] px-1 py-0.5 rounded-sm">
+                                                  {div}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* Fleet / Machinery */}
+                                        <div className="space-y-1">
+                                          <span className="text-[8px] uppercase tracking-wider text-gray-400 block font-bold">Machinery</span>
+                                          {summaryA.equipment.length === 0 ? (
+                                            <span className="text-[8px] text-gray-500 italic block">None</span>
+                                          ) : (
+                                            <ul className="space-y-1 text-[8px] text-gray-350">
+                                              {summaryA.equipment.slice(0, 4).map((eq, i) => (
+                                                <li key={i} className="truncate">• {eq}</li>
+                                              ))}
+                                              {summaryA.equipment.length > 4 && <li className="text-gray-550 font-light italic">+{summaryA.equipment.length - 4} more</li>}
+                                            </ul>
+                                          )}
+                                        </div>
+
+                                        {/* Materials */}
+                                        <div className="space-y-1">
+                                          <span className="text-[8px] uppercase tracking-wider text-gray-400 block font-bold">Materials</span>
+                                          {summaryA.materials.length === 0 ? (
+                                            <span className="text-[8px] text-gray-500 italic block">None</span>
+                                          ) : (
+                                            <ul className="space-y-1 text-[8px] text-gray-350">
+                                              {summaryA.materials.slice(0, 4).map((mat, i) => (
+                                                <li key={i} className="truncate">• {mat}</li>
+                                              ))}
+                                              {summaryA.materials.length > 4 && <li className="text-gray-550 font-light italic">+{summaryA.materials.length - 4} more</li>}
+                                            </ul>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Right Column: Target Region */}
+                                      <div className="space-y-4">
+                                        <h5 className="font-black text-[10px] text-secondary border-b border-slate-800 pb-1 uppercase tracking-tight">
+                                          {compareTargetRegion.replace(' Malawi', '')} Details
+                                        </h5>
+                                        
+                                        {/* Divisions */}
+                                        <div className="space-y-1">
+                                          <span className="text-[8px] uppercase tracking-wider text-gray-400 block font-bold">Divisions</span>
+                                          {summaryB.divisions.length === 0 ? (
+                                            <span className="text-[8px] text-gray-500 italic block">None</span>
+                                          ) : (
+                                            <div className="flex flex-wrap gap-1">
+                                              {summaryB.divisions.map((div, i) => (
+                                                <span key={i} className="bg-primary/30 border border-primary-light/5 text-white text-[8px] px-1 py-0.5 rounded-sm">
+                                                  {div}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* Fleet / Machinery */}
+                                        <div className="space-y-1">
+                                          <span className="text-[8px] uppercase tracking-wider text-gray-400 block font-bold">Machinery</span>
+                                          {summaryB.equipment.length === 0 ? (
+                                            <span className="text-[8px] text-gray-500 italic block">None</span>
+                                          ) : (
+                                            <ul className="space-y-1 text-[8px] text-gray-350">
+                                              {summaryB.equipment.slice(0, 4).map((eq, i) => (
+                                                <li key={i} className="truncate">• {eq}</li>
+                                              ))}
+                                              {summaryB.equipment.length > 4 && <li className="text-gray-550 font-light italic">+{summaryB.equipment.length - 4} more</li>}
+                                            </ul>
+                                          )}
+                                        </div>
+
+                                        {/* Materials */}
+                                        <div className="space-y-1">
+                                          <span className="text-[8px] uppercase tracking-wider text-gray-400 block font-bold">Materials</span>
+                                          {summaryB.materials.length === 0 ? (
+                                            <span className="text-[8px] text-gray-500 italic block">None</span>
+                                          ) : (
+                                            <ul className="space-y-1 text-[8px] text-gray-350">
+                                              {summaryB.materials.slice(0, 4).map((mat, i) => (
+                                                <li key={i} className="truncate">• {mat}</li>
+                                              ))}
+                                              {summaryB.materials.length > 4 && <li className="text-gray-550 font-light italic">+{summaryB.materials.length - 4} more</li>}
+                                            </ul>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                    </div>
+
+                                    {/* Combined Active Sites List */}
+                                    <div className="space-y-2 pt-2 border-t border-slate-800">
+                                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 block">
+                                        Active Sites Progress
+                                      </span>
+                                      <div className="grid grid-cols-2 gap-3">
+                                        {/* Region A Projects list */}
+                                        <div className="space-y-1.5">
+                                          <span className="text-[8px] text-gray-500 font-bold uppercase">{compareSourceRegion.replace(' Malawi', '')} ({summaryA.projectsList.length})</span>
+                                          {summaryA.projectsList.slice(0, 3).map((p) => (
+                                            <div key={p.id} className="bg-slate-900/60 p-1.5 border border-slate-850 text-[9px] rounded-sm">
+                                              <div className="truncate font-bold text-white mb-1" title={p.title}>{p.title}</div>
+                                              <div className="flex justify-between text-[7px] text-gray-400">
+                                                <span>{p.status}</span>
+                                                <span>{p.progress}%</span>
+                                              </div>
+                                              <div className="w-full bg-slate-800 h-1 mt-1 rounded-full overflow-hidden">
+                                                <div className="bg-secondary h-full" style={{ width: `${p.progress}%` }}></div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          {summaryA.projectsList.length > 3 && <div className="text-[8px] text-gray-500 text-center italic">+{summaryA.projectsList.length - 3} more</div>}
+                                        </div>
+
+                                        {/* Region B Projects list */}
+                                        <div className="space-y-1.5">
+                                          <span className="text-[8px] text-gray-500 font-bold uppercase">{compareTargetRegion.replace(' Malawi', '')} ({summaryB.projectsList.length})</span>
+                                          {summaryB.projectsList.slice(0, 3).map((p) => (
+                                            <div key={p.id} className="bg-slate-900/60 p-1.5 border border-slate-850 text-[9px] rounded-sm">
+                                              <div className="truncate font-bold text-white mb-1" title={p.title}>{p.title}</div>
+                                              <div className="flex justify-between text-[7px] text-gray-400">
+                                                <span>{p.status}</span>
+                                                <span>{p.progress}%</span>
+                                              </div>
+                                              <div className="w-full bg-slate-800 h-1 mt-1 rounded-full overflow-hidden">
+                                                <div className="bg-secondary h-full" style={{ width: `${p.progress}%` }}></div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          {summaryB.projectsList.length > 3 && <div className="text-[8px] text-gray-500 text-center italic">+{summaryB.projectsList.length - 3} more</div>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </>
+                                );
+                              })()}
+
+                            </div>
+
+                            {/* Footer actions for Comparison Mode */}
+                            <div className="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
+                              <button
+                                onClick={() => {
+                                  resetComparison();
+                                  setProjectRegionFilter([regionDetailsPanel]);
+                                }}
+                                className="w-full text-center py-2 bg-slate-800 hover:bg-slate-750 text-white font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer animate-fade-in"
+                              >
+                                Exit Comparison Mode
+                              </button>
+                            </div>
+                          </div>
+                        ) : (() => {
+                          const summary = getRegionalDeploymentSummary(regionDetailsPanel);
+                          return (
+                            <>
+                              {/* Panel Header */}
+                              <div className="p-4 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                                <div>
+                                  <div className="flex items-center gap-1.5 text-secondary text-[9px] font-black uppercase tracking-widest">
+                                    <span className="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span>
+                                    Deployed Inventory
+                                  </div>
+                                  <h4 className="text-sm font-black text-white mt-1 uppercase tracking-tight">
+                                    {regionDetailsPanel.replace(' Malawi', '')} Region
+                                  </h4>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    setRegionDetailsPanel(null);
+                                    setProjectRegionFilter(['all']);
+                                    setMapZoom(false);
+                                    resetComparison();
+                                  }}
+                                  className="p-1 text-gray-400 hover:text-white hover:bg-slate-800 rounded transition-colors cursor-pointer"
+                                  title="Close Details Panel"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+
+                              {/* Scrollable Panel Content */}
+                              <div className="p-4 flex-1 overflow-y-auto space-y-5 custom-scrollbar text-xs">
+                                
+                                {/* Summary Metrics */}
+                                <div className="grid grid-cols-2 gap-2 bg-slate-900/60 p-3 rounded border border-slate-800/50">
+                                  <div className="text-center p-1">
+                                    <span className="text-[10px] text-gray-400 block font-light">Active Sites</span>
+                                    <span className="text-lg font-black text-secondary mt-0.5 block">{summary.projectsList.length}</span>
+                                  </div>
+                                  <div className="text-center p-1 border-l border-slate-800">
+                                    <span className="text-[10px] text-gray-400 block font-light">Divisions</span>
+                                    <span className="text-lg font-black text-white mt-0.5 block">{summary.divisions.length}</span>
+                                  </div>
+                                </div>
+
+                                {/* Active Divisions */}
+                                <div className="space-y-1.5">
+                                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+                                    <HardHat size={11} className="text-secondary" />
+                                    Active Divisions
+                                  </span>
+                                  {summary.divisions.length === 0 ? (
+                                    <p className="text-[10px] text-gray-500 font-light italic">No active divisions currently deployed</p>
+                                  ) : (
+                                    <div className="flex flex-wrap gap-1 pt-1">
+                                      {summary.divisions.map((div, i) => (
+                                        <span key={i} className="bg-primary/40 border border-primary-light/10 text-white text-[9px] px-2 py-0.5 rounded-sm font-medium">
+                                          {div}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Equipment/Machinery list */}
+                                <div className="space-y-2">
+                                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 flex items-center gap-1.5 border-b border-slate-800 pb-1">
+                                    <Truck size={11} className="text-secondary" />
+                                    Machinery & Fleet Deployed
+                                  </span>
+                                  {summary.equipment.length === 0 ? (
+                                    <p className="text-[10px] text-gray-500 font-light italic">Standard safety support vehicles only</p>
+                                  ) : (
+                                    <ul className="space-y-1.5 pl-1 text-[10px] list-none">
+                                      {summary.equipment.map((eq, i) => (
+                                        <li key={i} className="flex items-start gap-1.5 text-gray-300 leading-tight">
+                                          <span className="text-secondary select-none text-[8px] mt-0.5">▪</span>
+                                          <span>{eq}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </div>
+
+                                {/* Materials list */}
+                                <div className="space-y-2">
+                                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 flex items-center gap-1.5 border-b border-slate-800 pb-1">
+                                    <Layers size={11} className="text-secondary" />
+                                    On-Site Materials Inventory
+                                  </span>
+                                  {summary.materials.length === 0 ? (
+                                    <p className="text-[10px] text-gray-500 font-light italic">Locally sourced building supplies</p>
+                                  ) : (
+                                    <ul className="space-y-1.5 pl-1 text-[10px] list-none">
+                                      {summary.materials.map((mat, i) => (
+                                        <li key={i} className="flex items-start gap-1.5 text-gray-300 leading-tight">
+                                          <span className="text-secondary select-none text-[8px] mt-0.5">▪</span>
+                                          <span>{mat}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </div>
+
+                                {/* Active Projects progress */}
+                                <div className="space-y-2">
+                                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 flex items-center gap-1.5 border-b border-slate-800 pb-1">
+                                    <MapPin size={11} className="text-secondary" />
+                                    Site Status & Progress
+                                  </span>
+                                  {summary.projectsList.length === 0 ? (
+                                    <p className="text-[10px] text-gray-500 font-light italic">No matching regional projects found</p>
+                                  ) : (
+                                    <div className="space-y-2.5">
+                                      {summary.projectsList.map((p) => (
+                                        <div key={p.id} className="bg-slate-900/40 p-2 border border-slate-800/40 hover:border-slate-800 transition-colors">
+                                          <div className="flex justify-between items-center gap-2">
+                                            <span className="font-extrabold text-[10px] text-white truncate max-w-[170px]" title={p.title}>
+                                              {p.title}
+                                            </span>
+                                            <span className={`text-[8px] font-black px-1.5 py-0.5 tracking-wider uppercase ${
+                                              p.status === 'Completed' ? 'bg-emerald-950 text-emerald-400' :
+                                              p.status === 'In Progress' ? 'bg-amber-950 text-amber-400' : 'bg-blue-950 text-blue-400'
+                                            }`}>
+                                              {p.status}
+                                            </span>
+                                          </div>
+                                          <div className="mt-2 space-y-1">
+                                            <div className="flex justify-between text-[8px] text-gray-400">
+                                              <span>Construction progress</span>
+                                              <span>{p.progress}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                              <div 
+                                                className="bg-secondary h-full rounded-full transition-all duration-500" 
+                                                style={{ width: `${p.progress}%` }}
+                                              ></div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                              </div>
+
+                              {/* Request Panel Footer Actions */}
+                              <div className="p-3 bg-slate-900 border-t border-slate-800 flex flex-col gap-2">
+                                <button
+                                  onClick={() => {
+                                    setRegionDetailsPanel(null);
+                                    setProjectRegionFilter(['all']);
+                                    setMapZoom(false);
+                                    resetComparison();
+                                    setCurrentView('quote-builder');
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="w-full text-center py-2 bg-secondary hover:bg-secondary/90 text-primary font-black text-[10px] uppercase tracking-wider transition-colors cursor-pointer"
+                                >
+                                  Inquire About Regional Fleet
+                                </button>
+
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                  <button
+                                    onClick={() => {
+                                      setCompareModeActive(true);
+                                      setCompareSourceRegion(regionDetailsPanel);
+                                      setCompareTargetRegion(null);
+                                      setProjectRegionFilter([regionDetailsPanel]);
+                                    }}
+                                    className="text-center py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-[9px] uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                                    title="Compare this region with another"
+                                  >
+                                    <ArrowRightLeft size={11} className="text-secondary" />
+                                    Compare Region
+                                  </button>
+                                  <button
+                                    onClick={() => exportRegionToCSV(regionDetailsPanel)}
+                                    className="text-center py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-[9px] uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                                    title="Export regional project data to CSV"
+                                  >
+                                    <Download size={11} className="text-secondary" />
+                                    Export CSV
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* 2. Advanced Multi-Criteria Filter Controls Panel */}
