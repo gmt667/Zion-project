@@ -800,7 +800,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#222222] font-sans flex flex-col justify-between">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#0b1f3a] text-[#222222] dark:text-[#f3f4f6] font-sans flex flex-col justify-between transition-colors duration-300">
       
       {/* 1. STICKY TOP CORPORATE NAVIGATION BAR */}
       <Navbar 

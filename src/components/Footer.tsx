@@ -4,6 +4,7 @@ import {
   Linkedin, Twitter, Calendar, ShieldCheck, Award 
 } from 'lucide-react';
 import { CompanyInfo } from '../types';
+import Logo from './Logo';
 
 interface FooterProps {
   companyInfo: CompanyInfo | null;
@@ -44,9 +45,7 @@ export default function Footer({ companyInfo, onNavigate }: FooterProps) {
           {/* Corporate Profile Column */}
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleLinkClick('home')}>
-              <div className="w-9 h-9 bg-secondary text-primary flex items-center justify-center rotate-45 border border-primary">
-                <span className="font-extrabold text-sm -rotate-45">Z</span>
-              </div>
+              <Logo className="w-9 h-9" />
               <span className="text-lg font-bold text-white tracking-wider uppercase">
                 ZION PROJECTS
               </span>

@@ -63,9 +63,9 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
   };
 
   return (
-    <header className="w-full flex flex-col z-50">
+    <header className="w-full flex flex-col z-50" style={{ transition: 'background 0.3s ease' }}>
       {/* Top Contact Strip */}
-      <div className="w-full bg-primary text-gray-300 text-xs py-2 px-4 md:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 border-b border-white/10">
+      <div className="w-full bg-primary dark:bg-[#061428] text-gray-300 dark:text-gray-400 text-xs py-2 px-4 md:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 border-b border-white/10">
         <div className="flex flex-wrap justify-center sm:justify-start items-center gap-4">
           <a href={`tel:${companyInfo?.phone || '+265997914840'}`} className="flex items-center gap-1.5 hover:text-secondary transition-colors">
             <Phone size={13} className="text-secondary" />
@@ -94,10 +94,14 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
       </div>
 
       {/* Main Sticky Navbar */}
-      <nav className={`w-full transition-all duration-300 py-3 px-4 md:px-8 flex justify-between items-center ${
+      <nav className={`w-full transition-all duration-500 py-3 px-4 md:px-8 flex justify-between items-center z-50 ${
         isScrolled 
-          ? 'fixed top-0 left-0 bg-white/85 dark:bg-[#0b1f3a]/85 backdrop-blur-md shadow-md border-b border-gray-100 dark:border-white/10 py-2 text-primary dark:text-white' 
-          : 'bg-white dark:bg-[#0b1f3a] text-primary dark:text-white'
+          ? 'fixed top-0 left-0 shadow-lg border-b border-gray-100 dark:border-white/10 py-2' 
+          : 'relative'
+      } ${
+        isScrolled 
+          ? (isDark ? 'bg-[#0b1f3a]/80 backdrop-blur-md text-white' : 'bg-white/85 backdrop-blur-md text-primary') 
+          : (isDark ? 'bg-[#0b1f3a] text-white' : 'bg-white text-primary')
       }`}>
         {/* Corporate Logo Group */}
         <div 
