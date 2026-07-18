@@ -580,6 +580,7 @@ export default function App() {
       ]);
 
       setCompanyInfo(resComp);
+
       setServices(resSrv);
       setProjects(resProj);
       setCategories(resCats);

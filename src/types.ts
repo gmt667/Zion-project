@@ -50,6 +50,7 @@ export interface CompanyInfo {
     branch: string;
   };
   ourPromise?: string;
+  logoBase64?: string;
 }
 
 export interface Service {

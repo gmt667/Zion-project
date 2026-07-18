@@ -1527,6 +1527,24 @@ app.delete('/api/admin/albums/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// SAVE LOGO ENDPOINT
+app.post('/api/admin/save-logo', (req, res) => {
+  try {
+    const { base64Data } = req.body;
+    if (!base64Data) {
+      return res.status(400).json({ error: "Missing base64Data" });
+    }
+    const buffer = Buffer.from(base64Data.replace(/^data:image\/\w+;base64,/, ""), 'base64');
+    const targetPath = path.join(process.cwd(), 'src', 'assets', 'zion-logo.png');
+    fs.writeFileSync(targetPath, buffer);
+    console.log(`Logo successfully saved to ${targetPath}`);
+    res.json({ success: true, message: "Logo saved successfully!" });
+  } catch (err: any) {
+    console.error("Failed to save logo:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // SERVER MIDDLEWARE SETUP FOR PRODUCTION / DEVELOPMENT (VITE)
 
 async function startServer() {
