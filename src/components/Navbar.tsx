@@ -3,6 +3,7 @@ import {
   Building2, HardHat, Phone, Mail, MapPin, Menu, X, 
   Lock, LayoutDashboard, ChevronDown, MessageSquare, AlertTriangle 
 } from 'lucide-react';
+import Logo from './Logo';
 import { CompanyInfo, User } from '../types';
 
 interface NavbarProps {
@@ -86,9 +87,7 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
           onClick={() => handleNavClick('home')} 
           className="flex items-center gap-3 cursor-pointer select-none"
         >
-          <div className="w-10 h-10 bg-primary flex items-center justify-center rotate-45 border border-secondary/40 transition-transform duration-500 hover:rotate-[135deg]">
-            <span className="text-secondary font-black text-xl -rotate-45">Z</span>
-          </div>
+          <Logo />
           <div className="leading-none">
             <span className="block text-base md:text-lg font-bold tracking-tight text-primary uppercase">
               ZION PROJECTS

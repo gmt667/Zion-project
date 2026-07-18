@@ -121,6 +121,84 @@ export default function App() {
   const [settings, setSettings] = useState<WebsiteSettings | null>(null);
   const [certificates, setCertificates] = useState<RegistrationCertificate[]>([]);
 
+  const heroSlides = [
+    {
+      image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=1600",
+      tagline: companyInfo?.name || 'ZION PROJECTS CONSTRUCTION LTD',
+      title: companyInfo?.slogan || "Building Malawi's Future Through Engineering Excellence",
+      description: companyInfo?.ceoMessage || "Zion Projects Construction Ltd delivers high-quality civil engineering, infrastructure development, building construction, and project management services across Malawi.",
+      primaryAction: { label: 'Request a Quote', view: 'quote-builder' },
+      secondaryAction: { label: 'View Our Projects', view: 'projects' }
+    },
+    {
+      image: projects.find((project) => project.featured)?.images?.[0]?.url || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1600",
+      tagline: 'FEATURED PROJECT',
+      title: projects.find((project) => project.featured)?.title || 'Pioneering Modern Commercial Landmarks',
+      description: projects.find((project) => project.featured)?.description || 'Experience our most recent public infrastructure and private commercial developments throughout Malawi.',
+      primaryAction: { label: 'Explore Portfolio', view: 'projects' },
+      secondaryAction: { label: 'Learn About Zion', view: 'about' }
+    },
+    {
+      image: services.find((service) => service.featured)?.image || "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=1600",
+      tagline: 'CORE SERVICES',
+      title: services.find((service) => service.featured)?.title || 'Connecting Communities Safely Across Rivers',
+      description: services.find((service) => service.featured)?.shortDescription || 'From highways and bridges to water systems and building construction, Zion Projects delivers end-to-end engineering solutions.',
+      primaryAction: { label: 'See Services', view: 'services' },
+      secondaryAction: { label: 'Meet Our Engineers', view: 'about' }
+    }
+  ];
+
+  const homepageStats = [
+    {
+      id: 'projects_completed',
+      label: 'Projects Completed',
+      value: projects.filter((project) => project.status === 'Completed').length,
+      suffix: ' Projects',
+      icon: <CheckCircle2 className="text-secondary w-8 h-8" />,
+      description: 'Successfully delivered infrastructure, commercial complexes, and public roads.'
+    },
+    {
+      id: 'ongoing_projects',
+      label: 'Ongoing Projects',
+      value: projects.filter((project) => project.status === 'In Progress').length,
+      suffix: ' Active',
+      icon: <HardHat className="text-secondary w-8 h-8" />,
+      description: 'Current high-priority civil works and structural installations under execution.'
+    },
+    {
+      id: 'professional_engineers',
+      label: 'Professional Engineers',
+      value: team.filter((member) => /engineer/i.test(member.role) || /engineering/i.test(member.department)).length || 24,
+      suffix: ' Registered',
+      icon: <Users className="text-secondary w-8 h-8" />,
+      description: 'Highly qualified NCIC and board-recognised specialists supporting each contract.'
+    },
+    {
+      id: 'years_experience',
+      label: 'Years of Experience',
+      value: 14,
+      suffix: '+ Years',
+      icon: <Clock className="text-secondary w-8 h-8" />,
+      description: 'Over a decade of engineering excellence and structural integrity across Malawi.'
+    },
+    {
+      id: 'satisfied_clients',
+      label: 'Satisfied Clients',
+      value: Math.max(120, projects.length * 18),
+      suffix: '+ Clients',
+      icon: <Award className="text-secondary w-8 h-8" />,
+      description: 'Government ministries, councils, NGOs, and corporate entities trusting our quality.'
+    },
+    {
+      id: 'districts_served',
+      label: 'Districts Served',
+      value: new Set(projects.map((project) => project.district).filter(Boolean)).size || 28,
+      suffix: ' Districts',
+      icon: <MapPin className="text-secondary w-8 h-8" />,
+      description: 'Active footprint spanning multiple districts and regions throughout Malawi.'
+    }
+  ];
+
   // Authentication & Session
   const [adminUser, setAdminUser] = useState<UserType | null>(null);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
@@ -750,7 +828,7 @@ export default function App() {
             <div className="animate-fade-in space-y-0">
               
               {/* Massive Animated Hero Slider */}
-              <HeroSlider onNavigate={setCurrentView} />
+              <HeroSlider onNavigate={setCurrentView} slides={heroSlides} />
 
               {/* Company Overview Brief */}
               <section className="py-20 px-4 md:px-8 bg-white max-w-7xl mx-auto w-full">
@@ -842,7 +920,7 @@ export default function App() {
               </section>
 
               {/* Dynamic Counters Indicator ribbon */}
-              <StatCounters />
+              <StatCounters stats={homepageStats} />
 
               {/* Featured Projects Grid */}
               <section className="py-20 px-4 md:px-8 bg-white max-w-7xl mx-auto w-full">

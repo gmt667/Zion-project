@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" fill="none" role="img" aria-label="Zion Construction logo">
+  <g>
+    <path d="M108 168H736v22H108z" fill="#000"/>
+    <path d="M742 168h18v52h-18z" fill="#000"/>
+    <path d="M148 168h50l39-82h-56l-33 82Z" fill="#000"/>
+    <circle cx="188" cy="86" r="18" fill="#000"/>
+    <path d="M188 102v54M188 102l-64 66M188 102l60 16M188 102l-10 70M188 102l36 24M188 102l24 48M188 102l-36 50M188 102l-50 44" stroke="#000" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M126 164h112v64H126z" fill="#000"/>
+    <path d="M122 228h120v18H122z" fill="#000"/>
+    <path d="M150 168v62M182 168v62M214 168v62" stroke="#fff" stroke-width="12"/>
+    <path d="M140 194h30M140 212h30M140 230h30" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+    <path d="M240 122l286 76" stroke="#000" stroke-width="12" stroke-linecap="round"/>
+    <path d="M240 122l-90 124" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <path d="M240 122l-54 138" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <path d="M240 122l-2 164" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <path d="M240 122l34 134" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <path d="M240 122l66 108" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <path d="M240 122l328 86" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <path d="M260 206h306v18H260z" fill="#000"/>
+    <path d="M268 206l52-16 34 16-52 16z" fill="#fff"/>
+    <path d="M338 206l52-16 34 16-52 16z" fill="#fff"/>
+    <path d="M408 206l52-16 34 16-52 16z" fill="#fff"/>
+    <path d="M478 206l52-16 34 16-52 16z" fill="#fff"/>
+    <path d="M548 206l52-16 34 16-52 16z" fill="#fff"/>
+    <path d="M618 206l52-16 34 16-52 16z" fill="#fff"/>
+    <path d="M398 232h88v22h-88z" fill="#000"/>
+    <path d="M440 254h6v80h-6z" fill="#000"/>
+    <path d="M450 254h6v80h-6z" fill="#000"/>
+    <path d="M310 248H496l126 74H184l126-74Z" fill="#f39a1f"/>
+    <path d="M308 250h190l26 15H282l26-15Z" fill="#fff"/>
+    <path d="M282 322h370l-19 12H301l-19-12Z" fill="#fff"/>
+    <path d="M345 250v84M493 250v84M345 250l74-42 74 42" stroke="#f39a1f" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M370 284h34v34h-34zM418 284h34v34h-34zM370 332h34v34h-34zM418 332h34v34h-34z" fill="#000"/>
+    <path d="M516 162h64v78h-64z" fill="#392f8f"/>
+    <path d="M516 162l34-14 30 14v78h-64z" fill="#3b3fb0"/>
+    <path d="M550 160l34 16v64h-34z" fill="#fff"/>
+    <path d="M592 232h34v44h-34z" fill="#3b3fb0"/>
+    <path d="M322 146h64v86h-64z" fill="#392f8f"/>
+    <path d="M322 146l34-14 30 14v86h-64z" fill="#3b3fb0"/>
+    <path d="M356 144l34 16v70h-34z" fill="#fff"/>
+    <path d="M356 184h10v10h-10zM372 184h10v10h-10zM356 202h10v10h-10zM372 202h10v10h-10z" fill="#7b7b7b"/>
+    <path d="M600 250v-64" stroke="#000" stroke-width="10" stroke-linecap="round"/>
+    <path d="M222 206l26 120M262 206l-18 120M226 320l40 48M258 320l-44 48M278 204l-34 126M236 204l32 126" stroke="#000" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M176 390H644" stroke="#000" stroke-width="18" stroke-linecap="round"/>
+    <text x="314" y="470" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="112" font-weight="900" letter-spacing="2">ZION</text>
+    <text x="380" y="506" fill="#000" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="800" letter-spacing="4">CONSTRUCTION</text>
+  </g>
+</svg>

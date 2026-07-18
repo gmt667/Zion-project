@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, ArrowRight, MessageSquare, Award, Compass, HeartHandshake } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+interface HeroSlide {
+  image: string;
+  tagline: string;
+  title: string;
+  description: string;
+  primaryAction: { label: string; view: string };
+  secondaryAction: { label: string; view: string };
+}
 
 interface HeroSliderProps {
   onNavigate: (view: string) => void;
+  slides?: HeroSlide[];
 }
 
-export default function HeroSlider({ onNavigate }: HeroSliderProps) {
+export default function HeroSlider({ onNavigate, slides }: HeroSliderProps) {
   const [current, setCurrent] = useState(0);
 
-  const slides = [
+  const fallbackSlides: HeroSlide[] = [
     {
       image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=1600",
       tagline: "ZION PROJECTS CONSTRUCTION LTD",
       title: "Building Malawi's Future Through Engineering Excellence",
       description: "Zion Projects Construction Ltd delivers high-quality civil engineering, infrastructure development, building construction, and project management services across Malawi while serving regional and international clients with professionalism, innovation, and integrity.",
       primaryAction: { label: "Request a Quote", view: "quote-builder" },
-      secondaryAction: { label: "View Our Projects", view: "projects" },
-      icon: <Compass className="text-secondary w-6 h-6 animate-spin-slow" />
+      secondaryAction: { label: "View Our Projects", view: "projects" }
     },
     {
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=1600",
@@ -25,8 +34,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
       title: "Pioneering Modern Commercial Landmarks",
       description: "From post-tension concrete skyscrapers to state-of-the-art office plazas. We shape the skylines of Lilongwe and Blantyre with zero-compromise engineering integrity.",
       primaryAction: { label: "Get Estimation", view: "quote-builder" },
-      secondaryAction: { label: "Learn About Zion", view: "about" },
-      icon: <Award className="text-secondary w-6 h-6 animate-pulse-slow" />
+      secondaryAction: { label: "Learn About Zion", view: "about" }
     },
     {
       image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=1600",
@@ -34,24 +42,25 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
       title: "Connecting Communities Safely Across Rivers",
       description: "Specialized in deep pile foundation drillings, monolithic abutment casting, and heavy pre-stressed concrete girder systems securing seasonal river flood crossings.",
       primaryAction: { label: "Request Quote", view: "quote-builder" },
-      secondaryAction: { label: "Meet Our Engineers", view: "about" },
-      icon: <HeartHandshake className="text-secondary w-6 h-6 animate-bounce" />
+      secondaryAction: { label: "Meet Our Engineers", view: "about" }
     }
   ];
 
+  const heroSlides = slides && slides.length > 0 ? slides : fallbackSlides;
+
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
+      setCurrent((prev) => (prev + 1) % heroSlides.length);
     }, 7000);
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [heroSlides.length]);
 
   const handlePrev = () => {
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+    setCurrent((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
   };
 
   const handleNext = () => {
-    setCurrent((prev) => (prev + 1) % slides.length);
+    setCurrent((prev) => (prev + 1) % heroSlides.length);
   };
 
   const handleNav = (view: string) => {
@@ -73,8 +82,8 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
           className="absolute inset-0 w-full h-full"
         >
           <img
-            src={slides[current].image}
-            alt={slides[current].title}
+            src={heroSlides[current].image}
+            alt={heroSlides[current].title}
             className="w-full h-full object-cover"
           />
           {/* Elegant Dark Vignette Overlay */}
@@ -100,7 +109,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
           >
             <div className="accent-line"></div>
             <span className="text-secondary text-xs font-semibold uppercase tracking-[0.4em]">
-              {slides[current].tagline}
+              {heroSlides[current].tagline}
             </span>
           </motion.div>
 
@@ -112,7 +121,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.1] max-w-3xl"
           >
             {(() => {
-              const parts = slides[current].title.split(', ');
+              const parts = heroSlides[current].title.split(', ');
               if (parts.length > 1) {
                 return (
                   <>
@@ -121,7 +130,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
                   </>
                 );
               }
-              const hyphenParts = slides[current].title.split(' - ');
+              const hyphenParts = heroSlides[current].title.split(' - ');
               if (hyphenParts.length > 1) {
                 return (
                   <>
@@ -130,7 +139,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
                   </>
                 );
               }
-              return slides[current].title;
+              return heroSlides[current].title;
             })()}
           </motion.h1>
 
@@ -141,7 +150,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
             transition={{ delay: 0.3 }}
             className="text-white/70 text-sm md:text-base leading-relaxed font-light max-w-xl mt-2"
           >
-            {slides[current].description}
+            {heroSlides[current].description}
           </motion.p>
 
           <motion.div
@@ -152,16 +161,16 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
             className="flex flex-wrap items-center gap-4 mt-6"
           >
             <button
-              onClick={() => handleNav(slides[current].primaryAction.view)}
+              onClick={() => handleNav(heroSlides[current].primaryAction.view)}
               className="bg-secondary text-primary px-10 py-4 font-bold uppercase tracking-widest text-xs hover:translate-y-[-2px] transition-all shadow-xl shadow-secondary/20 rounded-none border border-secondary cursor-pointer"
             >
-              <span>{slides[current].primaryAction.label}</span>
+              <span>{heroSlides[current].primaryAction.label}</span>
             </button>
             <button
-              onClick={() => handleNav(slides[current].secondaryAction.view)}
+              onClick={() => handleNav(heroSlides[current].secondaryAction.view)}
               className="border border-white/30 text-white px-10 py-4 font-bold uppercase tracking-widest text-xs hover:bg-white/10 transition-all rounded-none cursor-pointer"
             >
-              <span>{slides[current].secondaryAction.label}</span>
+              <span>{heroSlides[current].secondaryAction.label}</span>
             </button>
           </motion.div>
 
@@ -184,7 +193,7 @@ export default function HeroSlider({ onNavigate }: HeroSliderProps) {
 
       {/* Dots Indicator */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-        {slides.map((_, i) => (
+        {heroSlides.map((_, i) => (
           <button
             key={i}
             onClick={() => setCurrent(i)}

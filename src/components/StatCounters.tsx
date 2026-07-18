@@ -10,17 +10,14 @@ interface Stat {
   description: string;
 }
 
-export default function StatCounters() {
-  const [counts, setCounts] = useState<Record<string, number>>({
-    projects_completed: 0,
-    ongoing_projects: 0,
-    professional_engineers: 0,
-    years_experience: 0,
-    satisfied_clients: 0,
-    districts_served: 0
-  });
+interface StatCountersProps {
+  stats?: Stat[];
+}
 
-  const stats: Stat[] = [
+export default function StatCounters({ stats }: StatCountersProps) {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+
+  const fallbackStats: Stat[] = [
     {
       id: "projects_completed",
       label: "Projects Completed",
@@ -71,6 +68,8 @@ export default function StatCounters() {
     }
   ];
 
+  const resolvedStats = stats && stats.length > 0 ? stats : fallbackStats;
+
   useEffect(() => {
     const duration = 2000; // ms
     const steps = 50;
@@ -82,7 +81,7 @@ export default function StatCounters() {
       
       setCounts(() => {
         const nextCounts: Record<string, number> = {};
-        stats.forEach((stat) => {
+        resolvedStats.forEach((stat) => {
           const target = stat.value;
           const current = Math.round((target / steps) * currentStep);
           nextCounts[stat.id] = current > target ? target : current;
@@ -96,7 +95,7 @@ export default function StatCounters() {
     }, stepTime);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [resolvedStats]);
 
   return (
     <section className="py-20 bg-primary text-white relative overflow-hidden">
@@ -123,7 +122,7 @@ export default function StatCounters() {
 
         {/* Counters Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {stats.map((stat) => (
+          {resolvedStats.map((stat) => (
             <div 
               key={stat.id}
               className="bg-white/[0.03] border border-white/10 border-l-4 border-l-secondary rounded-none p-8 flex flex-col items-center text-center transition-all duration-300 transform hover:-translate-y-1 group"
