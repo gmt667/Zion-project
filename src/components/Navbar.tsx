@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Building2, HardHat, Phone, Mail, MapPin, Menu, X, 
   Lock, LayoutDashboard, ChevronDown, MessageSquare, AlertTriangle,
@@ -171,37 +172,72 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
       {isScrolled && <div className="h-[60px]" />}
 
       {/* Mobile Drawer Menu */}
-      {isOpen && (
-        <div className="lg:hidden fixed inset-0 bg-primary/95 text-white z-40 flex flex-col justify-center items-center p-6 transition-all duration-300">
-          <button
-            onClick={() => setIsOpen(false)}
-            className="absolute top-6 right-6 p-2 text-white hover:text-secondary cursor-pointer"
-          >
-            <X size={28} />
-          </button>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.button
+              type="button"
+              aria-label="Close mobile navigation"
+              onClick={() => setIsOpen(false)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-[2px] cursor-default"
+            />
 
-          <div className="flex flex-col items-center gap-6 text-center w-full max-w-sm">
-            {navItems.map((item) => (
-              <button
-                key={item.view}
-                onClick={() => handleNavClick(item.view)}
-                className={`text-lg font-bold tracking-wide w-full py-2 hover:text-secondary transition-all ${
-                  currentView === item.view ? 'text-secondary border-b border-secondary/30' : ''
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-            
-            <button
-              onClick={() => handleNavClick('quote-builder')}
-              className="mt-4 w-full bg-secondary hover:bg-secondary/90 text-primary font-black py-3 px-6 rounded-full text-sm uppercase tracking-widest shadow-lg cursor-pointer"
+            <motion.aside
+              initial={{ x: 32, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 32, opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:hidden fixed top-0 right-0 z-50 h-dvh w-[78vw] max-w-[280px] bg-primary text-white shadow-2xl border-l border-white/10 flex flex-col overflow-hidden"
             >
-              Get Estimation Quote
-            </button>
-          </div>
-        </div>
-      )}
+              <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Logo className="w-8 h-8 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.22em] text-white/55 font-bold truncate">Zion Projects</p>
+                    <p className="text-[8px] uppercase tracking-[0.28em] text-white/40 font-bold truncate">Menu</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 text-white hover:text-secondary cursor-pointer rounded-full bg-white/5"
+                  aria-label="Close menu"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-4 py-4">
+                <div className="flex flex-col gap-1.5">
+                  {navItems.map((item) => (
+                    <button
+                      key={item.view}
+                      onClick={() => handleNavClick(item.view)}
+                      className={`w-full text-left px-3 py-2.5 text-[12px] font-bold uppercase tracking-wider rounded-none border-l-2 transition-all duration-200 ${
+                        currentView === item.view
+                          ? 'text-secondary bg-white/5 border-secondary'
+                          : 'text-white/85 border-transparent hover:bg-white/5 hover:border-white/20 hover:text-white'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handleNavClick('quote-builder')}
+                  className="mt-4 w-full bg-secondary hover:bg-secondary/90 text-primary font-black py-2.5 px-4 rounded-none text-[11px] uppercase tracking-[0.22em] shadow-lg cursor-pointer"
+                >
+                  Get Quote
+                </button>
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

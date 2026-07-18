@@ -94,7 +94,21 @@ export default function HeroSlider({ onNavigate, slides }: HeroSliderProps) {
 
       {/* Floating Construction Mesh Design */}
       <div className="absolute inset-0 geometric-pattern opacity-10 pointer-events-none" />
-      <div className="absolute -right-20 -top-20 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
+      <motion.div
+        className="absolute -right-20 -top-20 w-[500px] h-[500px] bg-secondary/6 rounded-full blur-3xl pointer-events-none"
+        animate={{ x: [0, -18, 0], y: [0, 14, 0], scale: [1, 1.06, 1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute -left-24 bottom-[-120px] w-[380px] h-[380px] bg-white/5 rounded-full blur-3xl pointer-events-none"
+        animate={{ x: [0, 16, 0], y: [0, -12, 0], opacity: [0.45, 0.7, 0.45] }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-primary/45 to-transparent pointer-events-none"
+        animate={{ opacity: [0.35, 0.55, 0.35] }}
+        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+      />
 
       {/* Content Layer */}
       <div className="absolute inset-0 flex items-center px-6 sm:px-8 md:px-16 lg:px-24 pb-12">

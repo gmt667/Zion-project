@@ -66,7 +66,7 @@ function getInitialData() {
     workingHours: "Monday – Friday: 08:00 AM – 05:00 PM",
     workingHoursSat: "Closed",
     socialLinks: {
-      facebook: "https://facebook.com/zionprojectsmw",
+      facebook: "https://www.facebook.com/zionbuilding",
       linkedin: "https://linkedin.com/company/zion-projects-construction-ltd",
       twitter: "https://twitter.com/zionprojectsmw"
     },
@@ -365,11 +365,11 @@ function getInitialData() {
   ];
 
   const clients: ClientPartner[] = [
-    { id: "cl-1", name: "Malawi Roads Authority", logo: "https://upload.wikimedia.org/wikipedia/commons/d/df/Image_needed.svg", type: "client" },
-    { id: "cl-2", name: "Lilongwe Water Board", logo: "https://upload.wikimedia.org/wikipedia/commons/d/df/Image_needed.svg", type: "client" },
-    { id: "cl-3", name: "Zomba City Council", logo: "https://upload.wikimedia.org/wikipedia/commons/d/df/Image_needed.svg", type: "client" },
-    { id: "cp-1", name: "National Construction Industry Council (NCIC)", logo: "https://upload.wikimedia.org/wikipedia/commons/d/df/Image_needed.svg", type: "partner" },
-    { id: "cp-2", name: "Malawi Bureau of Standards (MBS)", logo: "https://upload.wikimedia.org/wikipedia/commons/d/df/Image_needed.svg", type: "partner" }
+    { id: "cl-1", name: "Malawi Roads Authority", logo: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&q=80&w=800", type: "client" },
+    { id: "cl-2", name: "Lilongwe Water Board", logo: "https://images.unsplash.com/photo-1508962914676-134849a727f0?auto=format&fit=crop&q=80&w=800", type: "client" },
+    { id: "cl-3", name: "Zomba City Council", logo: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800", type: "client" },
+    { id: "cp-1", name: "National Construction Industry Council (NCIC)", logo: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=800", type: "partner" },
+    { id: "cp-2", name: "Malawi Bureau of Standards (MBS)", logo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=800", type: "partner" }
   ];
 
   const team_members: TeamMember[] = [
