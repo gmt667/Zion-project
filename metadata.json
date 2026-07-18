@@ -1,0 +1,6 @@
+{
+  "name": "Zion Projects Construction",
+  "description": "Enterprise-grade digital portal for Zion Projects Construction Ltd, Malawian civil engineering and construction firm, featuring an interactive project portfolio, quotation builder, and secure administrative system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
