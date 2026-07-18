@@ -118,4 +118,104 @@ h1, h2, h3, h4, h5, h6 {
   filter: brightness(1.25) !important;
 }
 
+/* ─── Logo transparency & theme adaptation ───────────────────────────────────── */
+.logo-img {
+  background: transparent !important;
+  border: none !important;
+  mix-blend-mode: multiply;
+  transition: filter 0.3s ease, mix-blend-mode 0.3s ease;
+}
+
+.dark .logo-img {
+  filter: invert(1) hue-rotate(180deg) !important;
+  mix-blend-mode: screen !important;
+}
+
+/* ─── Dark Mode Overrides ─────────────────────────────────────────────────────── */
+.dark body {
+  background-color: #0b1f3a !important;
+  color: #f3f4f6 !important;
+}
+
+/* Background overrides */
+.dark .bg-white {
+  background-color: #122c4f !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-neutral-bg,
+.dark .bg-slate-50 {
+  background-color: #0d2543 !important;
+}
+
+.dark .bg-gray-100,
+.dark .bg-slate-100 {
+  background-color: #152d4e !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: #1c3d69 !important;
+}
+
+/* Text overrides */
+.dark .text-primary {
+  color: #ffffff !important;
+}
+
+.dark .text-gray-900,
+.dark .text-slate-900,
+.dark .text-black,
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #ffffff !important;
+}
+
+.dark .text-gray-700,
+.dark .text-slate-700,
+.dark .text-gray-800,
+.dark .text-slate-800 {
+  color: #e5e7eb !important;
+}
+
+.dark .text-gray-600,
+.dark .text-slate-600 {
+  color: #9ca3af !important;
+}
+
+.dark .text-gray-500,
+.dark .text-slate-500,
+.dark .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+/* Borders overrides */
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark .border-slate-100,
+.dark .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Specific elements adjustments for readability */
+.dark input, 
+.dark select, 
+.dark textarea {
+  background-color: #152d4e !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark input::placeholder, 
+.dark textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark .shadow-md, .dark .shadow-lg {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
 

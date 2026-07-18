@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Building2, HardHat, Phone, Mail, MapPin, Menu, X, 
-  Lock, LayoutDashboard, ChevronDown, MessageSquare, AlertTriangle 
+  Lock, LayoutDashboard, ChevronDown, MessageSquare, AlertTriangle,
+  Sun, Moon
 } from 'lucide-react';
 import Logo from './Logo';
 import { CompanyInfo, User } from '../types';
@@ -17,6 +18,22 @@ interface NavbarProps {
 export default function Navbar({ currentView, onNavigate, companyInfo, adminUser, onLogout }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const stored = localStorage.getItem('theme');
+    if (stored) return stored === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (isDark) {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -79,8 +96,8 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
       {/* Main Sticky Navbar */}
       <nav className={`w-full transition-all duration-300 py-3 px-4 md:px-8 flex justify-between items-center ${
         isScrolled 
-          ? 'fixed top-0 left-0 bg-white shadow-md border-b border-gray-100 py-2 text-primary' 
-          : 'bg-white text-primary'
+          ? 'fixed top-0 left-0 bg-white/85 dark:bg-[#0b1f3a]/85 backdrop-blur-md shadow-md border-b border-gray-100 dark:border-white/10 py-2 text-primary dark:text-white' 
+          : 'bg-white dark:bg-[#0b1f3a] text-primary dark:text-white'
       }`}>
         {/* Corporate Logo Group */}
         <div 
@@ -89,10 +106,10 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
         >
           <Logo />
           <div className="leading-none">
-            <span className="block text-base md:text-lg font-bold tracking-tight text-primary uppercase">
+            <span className="block text-base md:text-lg font-bold tracking-tight text-primary dark:text-white uppercase">
               ZION PROJECTS
             </span>
-            <span className="block text-[8px] md:text-[9px] uppercase tracking-[0.2em] opacity-60 text-gray-500 font-bold">
+            <span className="block text-[8px] md:text-[9px] uppercase tracking-[0.2em] opacity-60 text-gray-500 dark:text-gray-400 font-bold">
               Construction & Engineering Ltd
             </span>
           </div>
@@ -107,7 +124,7 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
               className={`px-3 py-2 text-[12px] font-semibold uppercase tracking-wider transition-all duration-200 hover:text-secondary relative ${
                 currentView === item.view 
                   ? 'text-secondary font-bold' 
-                  : 'text-primary'
+                  : 'text-primary dark:text-gray-300'
               }`}
             >
               {item.label}
@@ -120,9 +137,18 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
 
         {/* Action Button & Mobile Toggle */}
         <div className="flex items-center gap-3">
+          {/* Theme Toggle Button */}
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="p-2.5 rounded-full bg-gray-100 dark:bg-white/5 text-primary dark:text-white border border-gray-200 dark:border-white/10 hover:text-secondary dark:hover:text-secondary transition-all duration-300 cursor-pointer flex items-center justify-center"
+            aria-label="Toggle light and dark mode"
+          >
+            {isDark ? <Sun size={14} className="text-secondary" /> : <Moon size={14} />}
+          </button>
+
           <button
             onClick={() => handleNavClick('quote-builder')}
-            className="hidden sm:flex items-center gap-1.5 bg-primary text-secondary hover:bg-secondary hover:text-primary px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest border border-secondary transition-all duration-300 cursor-pointer shadow-sm"
+            className="hidden sm:flex items-center gap-1.5 bg-primary dark:bg-transparent text-secondary hover:bg-secondary hover:text-primary dark:hover:bg-secondary dark:hover:text-primary px-6 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-widest border border-secondary transition-all duration-300 cursor-pointer shadow-sm"
           >
             <MessageSquare size={12} />
             Request Quote
@@ -130,7 +156,7 @@ export default function Navbar({ currentView, onNavigate, companyInfo, adminUser
           
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 lg:hidden text-primary hover:text-secondary focus:outline-none cursor-pointer"
+            className="p-2 lg:hidden text-primary dark:text-white hover:text-secondary focus:outline-none cursor-pointer"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
